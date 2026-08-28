@@ -7,7 +7,7 @@ const REAL_KEY = 'led-layout-checker:layout:v1';
 const DEMO_KEY = 'demo:led-layout-checker:layout:v1';
 const LICENSE_KEY = 'sb_license:led-layout-checker';
 const LICENSE_CACHE_KEY = 'sb_license_check:led-layout-checker';
-const BUILD_ID = 'v1.0.2';
+const BUILD_ID = 'v1.0.3';
 const BILLING_BASE = 'https://api.sociobot.in/api/v1/products/led-layout-checker';
 const palette = ['#168a67', '#d45a49', '#a66f00', '#5368c9', '#8a4ba3'];
 
@@ -228,7 +228,7 @@ function planner(): string {
       <section class="check-panel" aria-labelledby="checks-title">
         <div class="check-title"><div><p class="eyebrow">Live preflight</p><h2 id="checks-title">${warningCount ? `${warningCount} ${warningCount === 1 ? 'warning' : 'warnings'}` : 'Ready to review'}</h2></div><span class="check-count ${warningCount ? 'has-warnings' : ''}">${warningCount ? '!' : '✓'}</span></div>
         <dl class="totals"><div><dt>Pixels</dt><dd>${layout.segments.reduce((n, segment) => n + segment.pixels, 0)}</dd></div><div><dt>Current</dt><dd>${totalCurrent(layout).toFixed(1)} A</dd></div><div><dt>Power</dt><dd>${totalWatts(layout).toFixed(0)} W</dd></div></dl>
-        <ul class="check-list">${checks.map((check) => `<li class="${check.level}"><span aria-hidden="true">${check.level === 'pass' ? '✓' : '!'}</span><div><strong>${escapeHtml(check.title)}</strong><p>${escapeHtml(check.detail)}</p></div></li>`).join('')}</ul>
+        <ul class="check-list" tabindex="0" aria-label="Preflight results">${checks.map((check) => `<li class="${check.level}"><span aria-hidden="true">${check.level === 'pass' ? '✓' : '!'}</span><div><strong>${escapeHtml(check.title)}</strong><p>${escapeHtml(check.detail)}</p></div></li>`).join('')}</ul>
         <p class="safety-note"><strong>Estimate only.</strong> Confirm wire size, fusing, voltage drop, and mains work with qualified guidance.</p>
       </section>
     </section>

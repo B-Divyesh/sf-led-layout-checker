@@ -93,6 +93,36 @@ test('landing page and planner have no serious accessibility issues', async ({ p
   }
 });
 
+test('overflowing preflight results are keyboard scrollable and pass axe', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/demo');
+  await page.getByRole('button', { name: /Segment/ }).click();
+  for (const [x, y] of [[0, 0], [100, 100]]) {
+    await page.getByLabel('X', { exact: true }).fill(String(x));
+    await page.getByLabel('Y', { exact: true }).fill(String(y));
+    await page.getByRole('button', { name: 'Place at coordinates' }).click();
+  }
+  await page.getByRole('button', { name: 'Finish segment' }).click();
+
+  const results = page.getByRole('list', { name: 'Preflight results' });
+  const dimensions = await results.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    overflowY: getComputedStyle(element).overflowY,
+  }));
+  expect(dimensions.scrollHeight).toBeGreaterThan(dimensions.clientHeight);
+  expect(dimensions.overflowY).toBe('auto');
+
+  await page.locator('#plan-canvas').focus();
+  await page.keyboard.press('Tab');
+  await expect(results).toBeFocused();
+  await page.keyboard.press('End');
+  await expect.poll(() => results.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+
+  const axe = await new AxeBuilder({ page: page as never }).analyze();
+  expect(axe.violations).toEqual([]);
+});
+
 test('cold first screen shows the audience, sample action, and three facts', async ({ page }) => {
   for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
@@ -293,7 +323,7 @@ test('offline shell keeps browser security policies and avoids full-size hero pr
     if (!navigator.serviceWorker.controller) await new Promise<void>((resolve) => navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true }));
   });
   const cachedUrls = await page.evaluate(async () => {
-    const cache = await caches.open('led-layout-checker-v7');
+    const cache = await caches.open('led-layout-checker-v8');
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cachedUrls).toContain('/assets/hero-routing-600.webp');
