@@ -52,7 +52,7 @@ A single spark travels along each data path to show direction. It lasts 2.4 seco
 
 ## Responsive behaviour
 
-At 390px the landing art sits below the action, tools become a two-column rail, and the inspector stacks below the plan. The plan keeps a 16:10 aspect ratio and a minimum usable height. Desktop uses a tool rail, plan, and check panel. Nothing relies on hover.
+At 390px the first screen keeps the audience, sample action, and facts visible; the landing art yields to the live preview below. Tools become a two-column rail, and the inspector stacks below the plan. The plan keeps a usable aspect ratio and minimum height. Desktop uses a tool rail, plan, and check panel. Nothing relies on hover.
 
 ## 404 treatment
 

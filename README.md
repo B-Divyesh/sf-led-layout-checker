@@ -24,7 +24,7 @@ Open `/demo` to load a 480-pixel garden arch. It includes three segments, one co
 
 ## Studio license
 
-The free planner includes all checks and labeled SVG export. A $12 one-time Studio license adds multiple controllers and a text parts summary. Checkout and verification use the Sociobot billing API; no payment provider is embedded here.
+The free planner includes all checks and labeled SVG export. Studio adds multiple controllers and a text parts summary. New Studio sales are paused because production checkout is not enabled. Existing license holders can restore access through the Sociobot verification service.
 
 ## Develop
 
@@ -50,7 +50,7 @@ Deploy `dist/` to Azure Static Web Apps. `public/staticwebapp.config.json` provi
 
 ## Privacy and limits
 
-Plan data and a pasted license stay in local storage. License checks contact `api.sociobot.in` at most once per day. See `/privacy` and `/terms` in the product.
+Plan data and a pasted license stay in local storage. Stored licenses contact `api.sociobot.in` at most once per day. See `/privacy` and `/terms` in the product.
 
 Current estimates depend on the values you enter. Confirm wire size, voltage drop, fusing, connectors, and mains work with qualified guidance.
 

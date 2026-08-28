@@ -1,78 +1,65 @@
-# LED Layout Checker — verification handoff
+# LED Layout Checker — repair handoff
 
-## Independent verification status: FAIL
+Repaired 2026-08-28 for work order `led-layout-checker-repair-1` from verifier report commit `220692eba37a4d6ce28ff089da8877b81ebe7409` and candidate `04c69d7b5fe9cc77f61427b131bcc49f1086263b`.
 
-Verified 2026-08-28 for work order `led-layout-checker-verify-1`.
+## What changed
 
-- Candidate: `04c69d7b5fe9cc77f61427b131bcc49f1086263b`
-- URL: `https://led-layout-checker.sociobot.in`
-- Deployment identity: every served candidate build file matches live byte-for-byte.
-- Release decision: **FAIL — do not release**.
+- Reworked the first screen so the audience, sample action, outcome, and all three facts fit at both 1280×720 and 390×844.
+- Removed the dead production checkout links and price promise. New Studio sales are plainly marked as paused; existing license restore, multi-controller planning, and parts export remain intact. Billing registration was not changed because repository policy reserves billing infrastructure for the factory.
+- Made every E2E claim command self-contained after `npm ci`; Playwright now builds before starting the production preview.
+- Reconnected orphaned segments automatically when the sole free controller is replaced. The free segment editor also exposes its controller assignment.
+- Bound cached license verdicts to their exact token. A checkout-return token always gets a fresh verification even when another token has a recent cached result.
+- Added manifest entries and exact tagged tests for daily license caching and paused Studio sales. Updated landing, legal, README, and copy-audit language to remove unsupported purchase claims.
+- Fixed 200% mobile reflow, 44px targets, and undersized planner support text. Replaced nested complementary landmarks and `role="application"`; the canvas now has a complete text alternative for routes, sources, and coordinates.
+- Added a real Azure Static Web Apps 404 response and a matching static 404 page. Known application routes still deep-link to the SPA.
+- Preserved CSP, referrer, permissions, and nosniff policies in cached responses; advanced the cache version and stopped precaching unused full-size hero variants.
+- Added 192px and 512px PWA icons. Unversioned art now caches for one day, while hashed JS/CSS remain immutable for one year.
+- Added strict ESLint coverage alongside the existing TypeScript check.
 
-Release blockers:
+## Verification evidence
 
-1. At 1280×720 the cold first screen shows the job headline, but the audience, **Try it with sample data**, its outcome, and all three facts are below the fold.
-2. Production Studio checkout returns HTTP 404 with `{"error":"enabled factory product","status":404}`.
-3. The exact E2E commands in `.factory/claims.json` time out from an installed clean clone because `vite preview` is started before `dist/` exists. Assertions pass only after an undeclared manual build.
-4. Removing and replacing the sole controller leaves free-plan segments unassigned with no assignment control; the broken state persists after reload.
-5. A new checkout-return license is not verified when any recent cached verdict exists, because cache data is not tied to the token.
-6. Checkout/price and daily license-check promises are not represented by claims entries/tests.
-
-Additional defects: 200% text causes 497 px content width at a 390 px viewport; 11 mobile targets are under 44 px; axe reports two moderate complementary-landmark issues; missing routes return HTTP 200; cached offline HTML loses CSP/referrer/permissions policies; and PWA install icons are incomplete.
-
-Passing evidence: `npm test` passes 4 unit and 11 Chromium tests; the exact production build passes; post-build claim assertions pass; npm audit reports 0 vulnerabilities; normal use is same-origin/local-first; keyboard placement, visible focus, reduced motion, demo reset/isolation, SVG export, rate limiting, service-worker update check, and offline reload pass. Live mobile Lighthouse scores are 100/100/100/100 with LCP 1.7 s, TBT 0 ms, and CLS 0. The verification endpoint first returned 429 on burst request 31 with `Retry-After: 4`.
-
-Full reproduction steps, evidence, severity, and required fixes are in `.factory/verification.md`.
-
----
-
-# Previous builder handoff
-
-Completed 2026-08-28 for work order `led-layout-checker-build-1`.
-
-## What shipped
-
-- A local-first LED planner at `/planner` with multi-point segments, controllers, supplies, data direction, power-point assumptions, brightness, voltage, and per-pixel current settings.
-- Live current and power totals plus warnings for missing power points, long single-ended runs, missing controllers, low supply headroom, and supply-voltage mismatches.
-- Labeled SVG export for every plan. Studio adds multiple-controller assignment and a text parts summary.
-- A one-click `/demo` with a 480-pixel garden arch, 11.5 A estimate, and two power warnings. Demo data uses a separate storage key and can be reset or discarded.
-- Sociobot one-time license checkout, return-token capture, daily verification cache, offline optimistic unlock, invalid-license handling, and license restore.
-- Offline app shell, local storage, Undo, reversible source/segment removal, keyboard coordinate placement, responsive 390px layout, paused motion control, and reduced-motion behavior.
-- Landing, privacy, terms, and designed 404 routes with SPA history/focus handling, metadata, social art, manifest, sitemap, robots file, CSP, and security headers.
-- Original generated hero art with prompt provenance. Responsive 600px/1200px WebP and PNG variants are bundled locally.
-
-## Run and verify
+Run from a clean dependency install with Node 22 and Playwright 1.58.2:
 
 ```sh
 npm ci
+npm audit --audit-level=high
+npm run lint
+npm run typecheck
 npm test
 npm run build
 ```
 
-`npm test` passes 4 Vitest checks and 11 Chromium checks. These cover every claim, SVG and parts downloads, demo isolation, offline reload, license verification, persistence, keyboard use at 390px, serious/critical axe findings, route semantics, and console errors.
+Results:
 
-The clean build writes `dist/index.html`. Final compressed application assets are 10.80 KB JavaScript and 4.68 KB CSS. The mobile hero WebP is 37 KB. `npm audit --audit-level=high` reports 0 vulnerabilities.
+- `npm ci`: pass.
+- `npm audit --audit-level=high`: 0 vulnerabilities.
+- `npm run lint`: pass.
+- `npm run typecheck`: pass.
+- `npm test`: 4 Vitest and 20 Chromium tests pass.
+- Every command in `.factory/claims.json` was also run separately and passed from the installed tree.
+- `npm run build`: pass; `dist/index.html` exists.
+- Production JS: 33.09 KB raw / 11.05 KB gzip.
+- Production CSS: 17.98 KB raw / 4.75 KB gzip.
+- Mobile hero WebP: 37.13 KB.
+- Azure Static Web Apps emulator: `/`, `/planner`, `/demo`, `/privacy`, and `/terms` return 200; an unknown path returns 404 with the designed page.
+- Emulator response policy: CSP, HSTS, Referrer-Policy, nosniff, and Permissions-Policy present; unversioned art has a one-day cache and hashed JS/CSS are immutable.
+- Factory `verify-url.sh`: pass at local production preview, 576 ms load, one `h1`, `lang=en`, main landmark, complete image alt text, and zero console errors.
+- Playwright: desktop 1280×720, mobile 390×844, 200% text reflow, 44px targets, keyboard coordinate editing, history/focus, downloads, persistence, demo isolation, offline reload, service-worker policy headers, and zero axe violations pass.
+- Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 0.9 s, LCP 1.7 s, TBT 0 ms, CLS 0.
 
-The worker verifier passed at `http://127.0.0.1:4173/`: title, `lang`, one `h1`, `main`, image alt text, button labels, and zero console errors.
+## Claims
 
-Lighthouse desktop headless results:
+All nine entries in `.factory/claims.json` have one exact tagged regression and pass independently: sample preflight, five rule families, free SVG export, local-only plans, demo isolation, offline reload, Studio license behavior, daily license caching, and paused Studio sales.
 
-| Category or metric | Result |
-| --- | ---: |
-| Performance | 100 |
-| Accessibility | 100 |
-| Best practices | 100 |
-| SEO | 100 |
-| First contentful paint | 0.9 s |
-| Largest contentful paint | 1.7 s |
-| Total blocking time | 10 ms |
-| Cumulative layout shift | 0 |
+## Deployment and live checks
 
-Evidence is in the worker-only `.factory/evidence/` directory. Claim definitions and exact commands are in `.factory/claims.json`.
+Pending the repair commit and production deployment. After deployment, re-run:
 
-## Known limits and next steps
+```sh
+/opt/fleet/lib/verify-url.sh https://led-layout-checker.sociobot.in .factory/evidence/live
+curl -I https://led-layout-checker.sociobot.in/definitely-missing-verifier-path
+```
 
-- Estimates depend on the entered LED, brightness, supply, and injection assumptions. The tool does not calculate wire gauge, fuse size, per-wire voltage drop, mains wiring, or electrical certification.
-- Supply placement and segment power points are visual assumptions; v1 does not model individual wire routes between them.
-- The factory must register the `led-layout-checker` product and $12 price in Sociobot billing before checkout can complete in production.
-- Deployment, DNS, billing registration, and user trials remain factory operations outside this repository.
+## Known gap
+
+New Studio sales remain paused because `https://api.sociobot.in/api/v1/products/led-layout-checker/checkout` returns 404 and product registration is outside this repository's allowed scope. The UI makes no purchase offer or price promise. Existing licenses continue to verify through the supported Sociobot endpoint. The factory can restore the purchase links after enabling that product and adding a live checkout claim test.

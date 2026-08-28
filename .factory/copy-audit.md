@@ -11,8 +11,7 @@ Audited 2026-08-28. Counts split contractions and hyphenated forms as one word. 
 | See a checked 480-pixel arch. | 5 | pass |
 | Plans stay in this browser. | 5 | pass |
 | Works offline after your first visit. | 6 | pass |
-| Free planner. | 2 | pass |
-| Studio is $12 once. | 4 | pass |
+| Core planning and SVG export are free. | 7 | pass |
 | Trace data from controller to the last pixel. | 8 | pass |
 | The preflight | 2 | pass |
 | See each assumption on one plan | 6 | pass |
@@ -33,11 +32,11 @@ Audited 2026-08-28. Counts split contractions and hyphenated forms as one word. 
 | A planning check, not electrical approval | 6 | pass |
 | Current figures use your pixel, brightness, and supply assumptions. | 9 | pass |
 | Confirm wire size, fusing, voltage drop, and mains work with qualified guidance. | 12 | pass |
-| Studio license | 2 | pass |
-| Plan larger builds for $12 once | 6 | pass |
-| Add multiple controllers and export a parts summary with the labeled SVG. | 11 | pass |
-| Safety checks and basic SVG export stay free. | 8 | pass |
-| Buy Studio | 2 | pass |
+| Studio licenses | 2 | pass |
+| Keep using an existing Studio license | 6 | pass |
+| Studio adds multiple controllers and a parts summary. | 8 | pass |
+| New sales are paused while checkout is unavailable. | 8 | pass |
+| Restore a license | 3 | pass |
 | Plan LED paths before soldering. | 5 | pass |
 | Hero imagery was generated for this product. | 7 | pass |
 
@@ -51,7 +50,7 @@ Audited 2026-08-28. Counts split contractions and hyphenated forms as one word. 
 | Where power joins a segment | power point |
 | Saved drawing and assumptions | plan |
 | Check results that need attention | warnings |
-| Paid capability set | Studio |
+| Licensed capability set | Studio |
 | Downloaded drawing | labeled SVG |
 
 Catalog description: “Plan LED strips, trace data flow, and catch power gaps before soldering.” (11 words, 72 characters)

@@ -15,8 +15,8 @@
   },
   {
     "id": "svg-export",
-    "claim": "Exports a labeled SVG with the plan and current estimate.",
-    "where": "planner toolbar and landing page",
+    "claim": "The free planner exports a labeled SVG with the plan and current estimate.",
+    "where": "landing facts and planner toolbar",
     "test": "npm run test:e2e -- --grep @claim:svg-export",
     "sandbox": "demo layout; inspect downloaded SVG"
   },
@@ -47,5 +47,19 @@
     "where": "pricing and Studio panel",
     "test": "npm run test:e2e -- --grep @claim:studio-license",
     "sandbox": "demo layout with a recorded valid verification response"
+  },
+  {
+    "id": "daily-license-check",
+    "claim": "A stored license is checked at most once per day.",
+    "where": "README and privacy notes",
+    "test": "npm run test:e2e -- --grep @claim:daily-license-check",
+    "sandbox": "stored license with a stale token-bound verdict; recorded valid verification response; two reloads"
+  },
+  {
+    "id": "studio-sales-paused",
+    "claim": "New Studio sales are paused while checkout is unavailable.",
+    "where": "landing and Studio panel",
+    "test": "npm run test:e2e -- --grep @claim:studio-sales-paused",
+    "sandbox": "landing and planner contain no checkout link; existing license restore remains available"
   }
 ]

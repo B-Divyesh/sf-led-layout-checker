@@ -1,0 +1,22 @@
+:root { color-scheme: dark; font-family: Inter, Aptos, "Segoe UI", sans-serif; color: #f5f1df; background: #07110f; }
+* { box-sizing: border-box; }
+body { min-width: 320px; min-height: 100vh; margin: 0; overflow-wrap: anywhere; background-color: #07110f; background-image: linear-gradient(rgba(138,245,198,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(138,245,198,.045) 1px,transparent 1px); background-size: 32px 32px; }
+header, footer { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 12px clamp(16px,4vw,64px); border-bottom: 1px solid #29423a; }
+header nav, footer nav { display: flex; gap: 16px; }
+header a, footer a { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #b9c9c0; }
+.wordmark { color: #f5f1df; font-weight: 800; text-transform: uppercase; text-decoration: none; }
+.skip { position: fixed; top: -80px; left: 16px; z-index: 2; padding: 12px 18px; color: #07110f; background: #ffd166; font-weight: 800; }
+.skip:focus { top: 12px; }
+main { min-height: calc(100vh - 190px); max-width: 860px; padding: clamp(64px,10vw,140px) clamp(16px,5vw,80px); }
+h1 { max-width: 10ch; margin: 0; font-family: "Arial Narrow", "Aptos Narrow", sans-serif; font-size: clamp(3rem,8vw,6rem); line-height: .98; text-transform: uppercase; }
+p { max-width: 60ch; color: #b9c9c0; font-size: 1.05rem; line-height: 1.55; }
+.eyebrow { margin-bottom: 16px; color: #8af5c6; font-size: 1rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.path { display: flex; align-items: center; gap: 12px; width: min(280px,100%); margin-bottom: 40px; }
+.path span { display: grid; place-items: center; width: 54px; height: 54px; flex: 0 0 54px; color: #07110f; background: #ffd166; border-radius: 50%; font-size: 1.3rem; font-weight: 800; }
+.path i { flex: 1; border-top: 4px dashed #ff806b; }
+a { min-height: 44px; display: inline-flex; align-items: center; margin-top: 24px; padding: 12px 20px; color: #07110f; background: #8af5c6; font-weight: 800; text-underline-offset: 4px; }
+a:focus-visible { outline: 3px solid #ffd166; outline-offset: 4px; }
+footer { flex-wrap: wrap; border-top: 1px solid #29423a; border-bottom: 0; color: #b9c9c0; }
+footer p { margin: 0; }
+footer a, header a { margin-top: 0; padding: 0; background: transparent; }
+@media (max-width: 520px) { header, footer { align-items: flex-start; flex-direction: column; gap: 4px; } header nav { width: 100%; justify-content: space-between; } }

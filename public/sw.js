@@ -1,14 +1,25 @@
-const CACHE = 'led-layout-checker-v5';
-const SHELL = ['/', '/favicon.svg', '/assets/hero-routing.webp', '/assets/hero-routing-600.webp', '/assets/hero-routing.png', '/assets/hero-routing-600.png'];
+const CACHE = 'led-layout-checker-v6';
+const SHELL = ['/', '/favicon.svg', '/manifest.webmanifest', '/icon-192.png', '/assets/hero-routing-600.webp'];
+
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self' https://api.sociobot.in; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://api.sociobot.in; frame-ancestors 'none'",
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'X-Content-Type-Options': 'nosniff',
+};
 
 async function cleanResponse(response) {
+  const headers = new Headers({
+    'Content-Type': response.headers.get('content-type') || 'application/octet-stream',
+    'Cache-Control': response.headers.get('cache-control') || 'public, max-age=86400',
+  });
+  for (const [name, fallback] of Object.entries(SECURITY_HEADERS)) {
+    headers.set(name, response.headers.get(name) || fallback);
+  }
   return new Response(await response.arrayBuffer(), {
     status: response.status,
     statusText: response.statusText,
-    headers: {
-      'Content-Type': response.headers.get('content-type') || 'application/octet-stream',
-      'Cache-Control': 'public, max-age=31536000',
-    },
+    headers,
   });
 }
 
@@ -19,7 +30,7 @@ self.addEventListener('install', (event) => {
     const html = await response.clone().text();
     const assets = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((match) => match[1]);
     await cache.put('/', await cleanResponse(response));
-    const files = [...SHELL.filter((url) => url !== '/'), ...assets];
+    const files = [...new Set([...SHELL.filter((url) => url !== '/'), ...assets])];
     await Promise.all(files.map(async (url) => {
       const fresh = await fetch(new Request(url, { cache: 'reload' }));
       if (!fresh.ok) throw new Error(`Could not cache ${url}`);

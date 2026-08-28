@@ -7,7 +7,7 @@ const REAL_KEY = 'led-layout-checker:layout:v1';
 const DEMO_KEY = 'demo:led-layout-checker:layout:v1';
 const LICENSE_KEY = 'sb_license:led-layout-checker';
 const LICENSE_CACHE_KEY = 'sb_license_check:led-layout-checker';
-const BUILD_ID = 'v1.0.0';
+const BUILD_ID = 'v1.0.1';
 const BILLING_BASE = 'https://api.sociobot.in/api/v1/products/led-layout-checker';
 const palette = ['#168a67', '#d45a49', '#a66f00', '#5368c9', '#8a4ba3'];
 
@@ -122,7 +122,7 @@ function landing(): string {
         <ul class="plain-facts" aria-label="Product facts">
           <li><span aria-hidden="true">⌂</span> Plans stay in this browser.</li>
           <li><span aria-hidden="true">↯</span> Works offline after your first visit.</li>
-          <li><span aria-hidden="true">◇</span> Free planner. Studio is $12 once.</li>
+          <li><span aria-hidden="true">◇</span> Core planning and SVG export are free.</li>
         </ul>
       </div>
       <figure class="hero-art">
@@ -157,11 +157,11 @@ function landing(): string {
     </section>
     <section class="pricing" aria-labelledby="pricing-title">
       <div>
-        <p class="eyebrow">Studio license</p>
-        <h2 id="pricing-title">Plan larger builds for $12 once</h2>
-        <p>Add multiple controllers and export a parts summary with the labeled SVG. Safety checks and basic SVG export stay free.</p>
+        <p class="eyebrow">Studio licenses</p>
+        <h2 id="pricing-title">Keep using an existing Studio license</h2>
+        <p>Studio adds multiple controllers and a parts summary. New sales are paused while checkout is unavailable.</p>
       </div>
-      <div class="price-action"><strong>$12</strong><span>one-time purchase</span><a class="button light" href="${BILLING_BASE}/checkout">Buy Studio</a></div>
+      <div class="price-action"><a class="button light" href="/planner#studio-title" data-link>Restore a license</a></div>
     </section>
   </main>${footer()}`;
 }
@@ -180,10 +180,10 @@ function miniPreview(): string {
 }
 
 function demoBanner(): string {
-  return `<aside class="demo-banner" aria-label="Demo mode">
+  return `<div class="demo-banner" role="status" aria-label="Demo mode">
     <strong>Demo — sample data, nothing is saved to your plans.</strong>
     <div><button class="text-button" id="reset-demo">Reset demo</button><button class="text-button" id="start-real">Start for real</button></div>
-  </aside>`;
+  </div>`;
 }
 
 function planner(): string {
@@ -197,7 +197,7 @@ function planner(): string {
       <div class="heading-actions"><span id="save-status" role="status">Changes save in this browser</span><button id="undo" ${undoStack.length ? '' : 'disabled'}>Undo</button><button class="primary" id="export-svg">Export labeled SVG</button></div>
     </section>
     <section class="workspace" aria-label="LED layout editor">
-      <aside class="tool-rail" aria-labelledby="tools-title">
+      <div class="tool-rail" aria-labelledby="tools-title">
         <h2 id="tools-title">Place</h2>
         <button class="tool ${activeTool === 'select' ? 'active' : ''}" data-tool="select" aria-pressed="${activeTool === 'select'}"><span>↖</span>Select</button>
         <button class="tool ${activeTool === 'segment' ? 'active' : ''}" data-tool="segment" aria-pressed="${activeTool === 'segment'}"><span>⌁</span>Segment</button>
@@ -210,23 +210,24 @@ function planner(): string {
           <button id="add-point">Place at coordinates</button>
         </div>
         ${drawingPoints.length ? `<div class="draw-status" role="status"><strong>${drawingPoints.length} points in new segment</strong><button id="finish-segment" ${drawingPoints.length < 2 ? 'disabled' : ''}>Finish segment</button><button id="cancel-draw">Cancel</button></div>` : ''}
-      </aside>
+      </div>
       <div class="plan-wrap">
         <div class="plan-toolbar">
           <label>Plan name<input id="layout-name" value="${escapeHtml(layout.name)}" maxlength="70" /></label>
           <button id="motion-toggle" aria-pressed="${motionPaused}">${motionPaused ? 'Play data flow' : 'Pause data flow'}</button>
         </div>
-        <div id="plan-canvas" class="plan-canvas" tabindex="0" role="application" aria-label="LED layout plan. Choose a placement tool, then click to place it.">
+        <div id="plan-canvas" class="plan-canvas" tabindex="0" role="group" aria-label="LED layout plan" aria-describedby="plan-description">
           ${planSvg(layout)}
         </div>
+        ${planDescription(layout)}
         <p class="canvas-help">Choose Segment, Controller, or Supply. Then click the plan. Use the coordinate controls for keyboard placement.</p>
       </div>
-      <aside class="check-panel" aria-labelledby="checks-title">
+      <section class="check-panel" aria-labelledby="checks-title">
         <div class="check-title"><div><p class="eyebrow">Live preflight</p><h2 id="checks-title">${warningCount ? `${warningCount} ${warningCount === 1 ? 'warning' : 'warnings'}` : 'Ready to review'}</h2></div><span class="check-count ${warningCount ? 'has-warnings' : ''}">${warningCount ? '!' : '✓'}</span></div>
         <dl class="totals"><div><dt>Pixels</dt><dd>${layout.segments.reduce((n, segment) => n + segment.pixels, 0)}</dd></div><div><dt>Current</dt><dd>${totalCurrent(layout).toFixed(1)} A</dd></div><div><dt>Power</dt><dd>${totalWatts(layout).toFixed(0)} W</dd></div></dl>
         <ul class="check-list">${checks.map((check) => `<li class="${check.level}"><span aria-hidden="true">${check.level === 'pass' ? '✓' : '!'}</span><div><strong>${escapeHtml(check.title)}</strong><p>${escapeHtml(check.detail)}</p></div></li>`).join('')}</ul>
         <p class="safety-note"><strong>Estimate only.</strong> Confirm wire size, fusing, voltage drop, and mains work with qualified guidance.</p>
-      </aside>
+      </section>
     </section>
     <section class="setup" aria-labelledby="setup-title">
       <div class="setup-heading"><div><p class="eyebrow">Plan details</p><h2 id="setup-title">Set the assumptions</h2></div><p>Current uses the values below. A 20% supply margin appears in the checks.</p></div>
@@ -252,7 +253,7 @@ function segmentFields(segment: Segment): string {
   return `<label>Segment<select id="active-segment">${layout.segments.map((item) => `<option value="${item.id}" ${item.id === segment.id ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select></label>
     <label>Name<input id="segment-name" value="${escapeHtml(segment.name)}" maxlength="40" /></label>
     <label>Pixel count<input id="segment-pixels" type="number" min="1" max="5000" value="${segment.pixels}" /></label>
-    ${paid ? `<label>Controller<select id="segment-controller">${layout.controllers.map((controller) => `<option value="${controller.id}" ${controller.id === segment.controllerId ? 'selected' : ''}>${escapeHtml(controller.name)}</option>`).join('')}</select></label>` : ''}
+    ${layout.controllers.length ? `<label>Controller<select id="segment-controller">${layout.controllers.map((controller) => `<option value="${controller.id}" ${controller.id === segment.controllerId ? 'selected' : ''}>${escapeHtml(controller.name)}</option>`).join('')}</select></label>` : '<p class="field-result">Place a controller to restore the data route.</p>'}
     <label>Data direction<select id="segment-direction"><option value="forward" ${segment.direction === 'forward' ? 'selected' : ''}>Start → end</option><option value="reverse" ${segment.direction === 'reverse' ? 'selected' : ''}>End → start</option></select></label>
     <label>Power enters<select id="segment-injection"><option value="none" ${segment.injection === 'none' ? 'selected' : ''}>Not marked</option><option value="start" ${segment.injection === 'start' ? 'selected' : ''}>Data start</option><option value="both" ${segment.injection === 'both' ? 'selected' : ''}>Both ends</option></select></label>
     <p class="field-result">Estimated segment current: <strong>${segmentCurrent(segment, layout).toFixed(1)} A</strong></p>
@@ -261,9 +262,20 @@ function segmentFields(segment: Segment): string {
 
 function studioSection(): string {
   return `<section class="studio-panel" aria-labelledby="studio-title">
-    <div><p class="eyebrow">Optional Studio</p><h2 id="studio-title">Multiple controllers and a parts summary</h2><p>$12 once. The free planner keeps its safety checks and labeled SVG export.</p></div>
-    <div class="studio-actions">${paid ? `<span class="license-active">✓ Studio active</span><button id="export-summary">Export parts summary</button>` : `<a class="button light" href="${BILLING_BASE}/checkout">Buy Studio for $12</a>${licenseNotice ? `<p class="license-notice">${escapeHtml(licenseNotice)}</p>` : ''}<details><summary>Have a license?</summary><label>License token<input id="license-token" autocomplete="off" /></label><button id="verify-license">Verify license</button><p id="license-message" role="status"></p></details>`}</div>
+    <div><p class="eyebrow">Optional Studio</p><h2 id="studio-title">Multiple controllers and a parts summary</h2><p>The free planner keeps its checks and labeled SVG export. New Studio sales are paused.</p></div>
+    <div class="studio-actions">${paid ? `<span class="license-active">✓ Studio active</span><button id="export-summary">Export parts summary</button>` : `${licenseNotice ? `<p class="license-notice">${escapeHtml(licenseNotice)}</p>` : ''}<details><summary>Restore an existing license</summary><label>License token<input id="license-token" autocomplete="off" /></label><button id="verify-license">Verify license</button><p id="license-message" role="status"></p></details>`}</div>
   </section>`;
+}
+
+function planDescription(value: Layout): string {
+  const segments = value.segments.map((segment) => {
+    const route = segment.points.map((point) => `${point.x}, ${point.y}`).join(' to ');
+    const controller = value.controllers.find((item) => item.id === segment.controllerId)?.name ?? 'no controller';
+    return `<li>${escapeHtml(segment.name)}: ${segment.pixels} pixels, ${escapeHtml(segment.direction)} data, ${escapeHtml(controller)}, coordinates ${route}.</li>`;
+  }).join('');
+  const controllers = value.controllers.map((item) => `${escapeHtml(item.name)} at ${item.point.x}, ${item.point.y}`).join('; ') || 'none';
+  const supplies = value.supplies.map((item) => `${escapeHtml(item.name)} at ${item.point.x}, ${item.point.y}`).join('; ') || 'none';
+  return `<div id="plan-description" class="sr-only"><h3>Plan contents</h3><p>Controllers: ${controllers}. Supplies: ${supplies}.</p><ul>${segments || '<li>No LED segments yet.</li>'}</ul></div>`;
 }
 
 function planSvg(value: Layout): string {
@@ -311,12 +323,12 @@ function legalPage(kind: 'privacy' | 'terms'): string {
   const title = privacy ? 'Your plan stays on your device' : 'Use the checker as a planning aid';
   return `${header()}<main id="main" class="text-page"><p class="eyebrow">${privacy ? 'Privacy' : 'Terms'}</p><h1 tabindex="-1">${title}</h1>${privacy ? `
     <p>LED Layout Checker stores your plan and license token in this browser. It does not send plan data to our servers.</p>
-    <h2>What leaves your browser</h2><p>Opening checkout or verifying a license contacts the Sociobot billing service. Checkout is handled by Sociobot and its merchant of record.</p>
+    <h2>What leaves your browser</h2><p>Verifying an existing license contacts the Sociobot billing service. Plan data is not included.</p><p>A stored verdict is reused for one day.</p>
     <h2>Demo data</h2><p>Demo changes use a separate browser key. “Start for real” removes that demo copy.</p>
     <h2>Delete your data</h2><p>Clear this site’s browser storage to remove plans and license data.</p>` : `
     <p>This tool provides conservative estimates from the values you enter. It is not electrical advice or certification.</p>
     <h2>Your responsibility</h2><p>Confirm supply sizing, wire gauge, fusing, voltage drop, connectors, and mains work with qualified guidance.</p>
-    <h2>Studio purchase</h2><p>Studio is a $12 one-time license. Sociobot and Dodo are the merchant of record. Approved refunds revoke the license.</p>
+    <h2>Studio license</h2><p>Existing Studio licenses can be restored. New sales are paused while checkout is unavailable.</p>
     <h2>No warranty</h2><p>The software is provided “as is” under the MIT License. Stop if a check conflicts with qualified advice.</p>`}<a class="button primary" href="/planner" data-link>Open the planner</a></main>${footer()}`;
 }
 
@@ -458,7 +470,15 @@ function placeAt(point: Point): void {
   }
   if (activeTool === 'controller') {
     if (!paid && layout.controllers.length >= 1) return toast('The free plan includes one controller. Studio adds more.');
-    updateAndRender(() => layout.controllers.push({ id: crypto.randomUUID(), name: `Controller ${layout.controllers.length + 1}`, point }));
+    updateAndRender(() => {
+      const id = crypto.randomUUID();
+      layout.controllers.push({ id, name: `Controller ${layout.controllers.length + 1}`, point });
+      if (layout.controllers.length === 1) {
+        layout.segments.forEach((segment) => {
+          if (!segment.controllerId || !layout.controllers.some((controller) => controller.id === segment.controllerId)) segment.controllerId = id;
+        });
+      }
+    });
   } else if (activeTool === 'supply') {
     updateAndRender(() => layout.supplies.push({ id: crypto.randomUUID(), name: `Supply ${layout.supplies.length + 1}`, point, volts: layout.voltage, amps: 10 }));
   } else {
@@ -522,7 +542,7 @@ async function restoreLicense(): Promise<void> {
     const result = await response.json() as { valid: boolean; reason?: string };
     if (!result.valid) { message.textContent = 'That license is not active. Check the token and try again.'; return; }
     localStorage.setItem(LICENSE_KEY, token);
-    localStorage.setItem(LICENSE_CACHE_KEY, JSON.stringify({ valid: true, checkedAt: Date.now() }));
+    localStorage.setItem(LICENSE_CACHE_KEY, JSON.stringify({ token, valid: true, checkedAt: Date.now() }));
     paid = true; licenseNotice = ''; renderRoute(false); toast('Studio license verified.');
   } catch {
     message.textContent = 'The license service could not be reached. Check your connection and try again.';
@@ -540,25 +560,31 @@ async function checkStoredLicense(): Promise<void> {
   const token = returned || localStorage.getItem(LICENSE_KEY);
   if (!token) return;
   const cached = safeCache(localStorage.getItem(LICENSE_CACHE_KEY));
-  if (cached) {
-    paid = cached.valid;
-    licenseNotice = cached.valid ? '' : 'This license is no longer active.';
+  const matchingCache = cached?.token === token ? cached : null;
+  if (matchingCache) {
+    paid = matchingCache.valid;
+    licenseNotice = matchingCache.valid ? '' : 'This license is no longer active.';
     if (isPlannerPath()) renderRoute(false);
   }
-  if (cached && Date.now() - cached.checkedAt < 86_400_000) return;
+  if (!returned && matchingCache && Date.now() - matchingCache.checkedAt < 86_400_000) return;
   try {
     const response = await fetch(`${BILLING_BASE}/verify?license=${encodeURIComponent(token)}`);
     const result = await response.json() as { valid: boolean };
     paid = result.valid;
     licenseNotice = result.valid ? '' : 'This license is no longer active.';
-    localStorage.setItem(LICENSE_CACHE_KEY, JSON.stringify({ valid: result.valid, checkedAt: Date.now() }));
+    localStorage.setItem(LICENSE_CACHE_KEY, JSON.stringify({ token, valid: result.valid, checkedAt: Date.now() }));
     if (isPlannerPath()) renderRoute(false);
   } catch { /* The free planner and cached verdict keep working offline. */ }
 }
 
-function safeCache(raw: string | null): { valid: boolean; checkedAt: number } | null {
+function safeCache(raw: string | null): { token: string; valid: boolean; checkedAt: number } | null {
   if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  try {
+    const value = JSON.parse(raw) as { token?: unknown; valid?: unknown; checkedAt?: unknown };
+    return typeof value.token === 'string' && typeof value.valid === 'boolean' && typeof value.checkedAt === 'number'
+      ? { token: value.token, valid: value.valid, checkedAt: value.checkedAt }
+      : null;
+  } catch { return null; }
 }
 
 window.addEventListener('popstate', () => renderRoute());
