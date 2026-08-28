@@ -1,4 +1,32 @@
-# LED Layout Checker — build handoff
+# LED Layout Checker — verification handoff
+
+## Independent verification status: FAIL
+
+Verified 2026-08-28 for work order `led-layout-checker-verify-1`.
+
+- Candidate: `04c69d7b5fe9cc77f61427b131bcc49f1086263b`
+- URL: `https://led-layout-checker.sociobot.in`
+- Deployment identity: every served candidate build file matches live byte-for-byte.
+- Release decision: **FAIL — do not release**.
+
+Release blockers:
+
+1. At 1280×720 the cold first screen shows the job headline, but the audience, **Try it with sample data**, its outcome, and all three facts are below the fold.
+2. Production Studio checkout returns HTTP 404 with `{"error":"enabled factory product","status":404}`.
+3. The exact E2E commands in `.factory/claims.json` time out from an installed clean clone because `vite preview` is started before `dist/` exists. Assertions pass only after an undeclared manual build.
+4. Removing and replacing the sole controller leaves free-plan segments unassigned with no assignment control; the broken state persists after reload.
+5. A new checkout-return license is not verified when any recent cached verdict exists, because cache data is not tied to the token.
+6. Checkout/price and daily license-check promises are not represented by claims entries/tests.
+
+Additional defects: 200% text causes 497 px content width at a 390 px viewport; 11 mobile targets are under 44 px; axe reports two moderate complementary-landmark issues; missing routes return HTTP 200; cached offline HTML loses CSP/referrer/permissions policies; and PWA install icons are incomplete.
+
+Passing evidence: `npm test` passes 4 unit and 11 Chromium tests; the exact production build passes; post-build claim assertions pass; npm audit reports 0 vulnerabilities; normal use is same-origin/local-first; keyboard placement, visible focus, reduced motion, demo reset/isolation, SVG export, rate limiting, service-worker update check, and offline reload pass. Live mobile Lighthouse scores are 100/100/100/100 with LCP 1.7 s, TBT 0 ms, and CLS 0. The verification endpoint first returned 429 on burst request 31 with `Retry-After: 4`.
+
+Full reproduction steps, evidence, severity, and required fixes are in `.factory/verification.md`.
+
+---
+
+# Previous builder handoff
 
 Completed 2026-08-28 for work order `led-layout-checker-build-1`.
 
