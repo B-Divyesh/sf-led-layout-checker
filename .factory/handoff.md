@@ -1,62 +1,34 @@
-# LED Layout Checker — polish round 2 handoff
+# LED Layout Checker — adversarial review 3 handoff
 
 ## Outcome
 
-All 22 cumulative findings from `.factory/review-1.md` and `.factory/review-2.md` are fixed. No severity was deferred.
+Review 3 is complete with verdict **PASS**, zero findings, and zero untested claims. No product code was modified.
 
-- Repair commit: `18b07f2a1c76280fb7f9bfecdb73a220e87bf803`
-- Deployment id: `1639b661-75b7-4f21-887d-1356e18f5138`
+- Reviewed commit: `3d051ccb548f55b72d30a8ae8cfd0688edf14946`
 - Live site: <https://led-layout-checker.sociobot.in>
-- Artifact: static Vite/TypeScript site in `dist/`
-- Finding-by-finding evidence: `.factory/polish-2.md`
+- Full report: `.factory/review-3.md`
 
-Round 2 closes F-2-1 by replacing one 25-word README test sentence with three sentences of 9, 6, and 9 words. The verb-first catalog description is 94 characters. All round-1 product fixes remain active: isolated demo licenses and plans, service-worker-safe 404s, pointer and keyboard selection, portable plan JSON, route metadata and focus, legal/payment copy, mobile reflow, and the routed-light visual identity.
+## Verification performed
 
-## Exact verification
+- Cold live reads in fresh Chromium contexts at 390×844 and 1440×900.
+- One-click live demo, realistic sample, reset, exit, real-storage sentinel isolation, request logging, SVG export, and offline reload.
+- Every one of the 15 exact `.factory/claims.json` commands, separately, from clean clone `/tmp/led-layout-review3.T1kh8R`.
+- Full clean-clone gates: `npm run lint`, `npm test`, and `npm audit --audit-level=high`.
+- Result: 4 unit tests and 33 Playwright tests passed; build produced `dist/`; audit found zero vulnerabilities.
+- Live route metadata, h1/main counts, header/footer, focus and Back behavior, installed-worker 404, unique-link crawl, and Axe scans on all routes and the 404.
+- Complete landing-page and README copy audit, plus live/code rechecks of all 22 earlier findings.
 
-From clean clone `/tmp/led-layout-claims.cbFSPU` at repair commit `18b07f2a1c76280fb7f9bfecdb73a220e87bf803` after `npm ci`:
-
-- Every one of the 15 exact `.factory/claims.json` commands passed independently.
-- `npm run lint` passed.
-- `npm run typecheck` passed.
-- `npm test` passed: 4 Vitest tests and 33 Playwright Chromium tests.
-- `npm audit --audit-level=high` passed with zero vulnerabilities.
-- `npm run build` produced `dist/index.html`.
-
-Build output:
-
-- JavaScript: 42.38 KB raw / 13.61 KB gzip.
-- CSS: 19.01 KB raw / 4.95 KB gzip.
-- No external font or runtime script.
-
-After deployment:
-
-- Factory URL verifier: HTTP 200, 871 ms load, expected title and language, one h1, a main landmark, complete image/button names, and zero console errors.
-- Fresh Playwright contexts: 60 checks passed for the landing page, demo, `/planner`, `/privacy`, `/terms`, and the designed 404.
-- Axe: zero violations on every real route, the demo, and the 404.
-- Mobile 390 px: required first-screen content fits; all visible targets are at least 44 px; 200% text causes no horizontal overflow.
-- Demo: one-click `/?demo=1`, persistent banner, reset/exit actions, 480 pixels, 11.5 A, and two warnings. Editing left real plan/license sentinels byte-identical.
-- Privacy: the normal sample/edit/reset flow made no cross-origin requests.
-- Offline/routing: valid routes use the cached shell offline; unknown routes return HTTP 404 before and after service-worker installation.
-- Metadata/focus: every route has its expected title, description, canonical and social metadata; SPA navigation and browser back focus the destination h1.
-- Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.7 s, TBT 0 ms, CLS 0.
-- Security: production serves CSP, HSTS, Referrer-Policy, Permissions-Policy, and `X-Content-Type-Options: nosniff`.
-- Billing: the production checkout endpoint returned HTTP 303 to hosted Dodo checkout.
-- Deployment identity: live JavaScript SHA-256 equals local `dist` at `91a66ee0b1e61ce2074b3832e7698df9acca2d76575f0b5f5d7fdf66e85c0f9d`.
-
-Evidence is under `.factory/evidence/polish-2/`.
-
-## Run locally
+## Reproduce
 
 ```sh
 npm ci
+npm run lint
 npm test
-npm run build
-npm run dev
+npm audit --audit-level=high
 ```
 
-Open <http://localhost:5173>. The isolated sample is <http://localhost:5173/?demo=1>.
+Open <https://led-layout-checker.sociobot.in> at 390 px and use **Try it with sample data** for the live sandbox flow.
 
 ## Known gaps and next steps
 
-None. The cumulative review now has zero unresolved findings.
+None found. The review changed only review documentation and this handoff.
