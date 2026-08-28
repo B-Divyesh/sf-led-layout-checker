@@ -1,26 +1,26 @@
-# LED Layout Checker — polish round 1 handoff
+# LED Layout Checker — polish round 2 handoff
 
 ## Outcome
 
-All 21 findings from `.factory/review-1.md` are fixed and deployed at <https://led-layout-checker.sociobot.in>. The full finding-to-change-to-evidence map is in `.factory/polish-1.md`.
+All 22 cumulative findings from `.factory/review-1.md` and `.factory/review-2.md` are fixed. No severity was deferred.
 
-Repair commit: `74261d1`
+- Repair commit: `18b07f2a1c76280fb7f9bfecdb73a220e87bf803`
+- Deployment id: `1639b661-75b7-4f21-887d-1356e18f5138`
+- Live site: <https://led-layout-checker.sociobot.in>
+- Artifact: static Vite/TypeScript site in `dist/`
+- Finding-by-finding evidence: `.factory/polish-2.md`
 
-Deployment id: `e5640888-db15-4851-b71a-074a9a0207d5`
+Round 2 closes F-2-1 by replacing one 25-word README test sentence with three sentences of 9, 6, and 9 words. The verb-first catalog description is 94 characters. All round-1 product fixes remain active: isolated demo licenses and plans, service-worker-safe 404s, pointer and keyboard selection, portable plan JSON, route metadata and focus, legal/payment copy, mobile reflow, and the routed-light visual identity.
 
-Artifact: static Vite/TypeScript site in `dist/`
+## Exact verification
 
-The routed-light visual identity is unchanged. The repair adds real demo license isolation, a direct `/?demo=1` entry, service-worker-safe 404 behavior, working pointer/keyboard selection, portable editable plan JSON, full route metadata, exact payment language, and plain public copy.
+From clean clone `/tmp/led-layout-claims.cbFSPU` at repair commit `18b07f2a1c76280fb7f9bfecdb73a220e87bf803` after `npm ci`:
 
-## Verification
-
-From a fresh clone of `74261d1` after `npm ci`:
-
-- Every one of the 15 exact commands in `.factory/claims.json` passed independently.
+- Every one of the 15 exact `.factory/claims.json` commands passed independently.
 - `npm run lint` passed.
 - `npm run typecheck` passed.
 - `npm test` passed: 4 Vitest tests and 33 Playwright Chromium tests.
-- `npm audit --audit-level=high` passed with 0 vulnerabilities.
+- `npm audit --audit-level=high` passed with zero vulnerabilities.
 - `npm run build` produced `dist/index.html`.
 
 Build output:
@@ -29,19 +29,22 @@ Build output:
 - CSS: 19.01 KB raw / 4.95 KB gzip.
 - No external font or runtime script.
 
-Live verification after deployment:
+After deployment:
 
-- Factory `verify-url.sh`: 200 response, 1,940 ms load, correct title/lang, one h1, main landmark, complete alt/button names, zero console errors.
-- Live Playwright + Axe: zero violations on `/`, `/planner`, `/?demo=1`, `/privacy`, `/terms`, and the 404.
+- Factory URL verifier: HTTP 200, 871 ms load, expected title and language, one h1, a main landmark, complete image/button names, and zero console errors.
+- Fresh Playwright contexts: 60 checks passed for the landing page, demo, `/planner`, `/privacy`, `/terms`, and the designed 404.
+- Axe: zero violations on every real route, the demo, and the 404.
+- Mobile 390 px: required first-screen content fits; all visible targets are at least 44 px; 200% text causes no horizontal overflow.
+- Demo: one-click `/?demo=1`, persistent banner, reset/exit actions, 480 pixels, 11.5 A, and two warnings. Editing left real plan/license sentinels byte-identical.
+- Privacy: the normal sample/edit/reset flow made no cross-origin requests.
+- Offline/routing: valid routes use the cached shell offline; unknown routes return HTTP 404 before and after service-worker installation.
+- Metadata/focus: every route has its expected title, description, canonical and social metadata; SPA navigation and browser back focus the destination h1.
 - Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.7 s, TBT 0 ms, CLS 0.
-- Mobile 390 px at 200% text: no horizontal overflow and no visible target below 44 px.
-- Demo flow: 480 pixels, 3 segments, 1 controller, 2 supplies, 11.5 A, and 2 warnings. Real plan/license sentinels stayed byte-identical through return-token verification, editing, reset, JSON import, and exit.
-- Offline: service-worker-controlled `/demo` reloaded with the sample. Unknown paths returned the designed 404 with status 404 after worker installation.
-- Privacy: normal demo editing made no cross-origin request. License calls remain explicit and go only to `api.sociobot.in`.
-- Checkout: production returned 303 to hosted Dodo checkout.
-- Deployment identity: live JavaScript SHA-256 matches `dist` at `91a66ee0b1e61ce2074b3832e7698df9acca2d76575f0b5f5d7fdf66e85c0f9d`.
+- Security: production serves CSP, HSTS, Referrer-Policy, Permissions-Policy, and `X-Content-Type-Options: nosniff`.
+- Billing: the production checkout endpoint returned HTTP 303 to hosted Dodo checkout.
+- Deployment identity: live JavaScript SHA-256 equals local `dist` at `91a66ee0b1e61ce2074b3832e7698df9acca2d76575f0b5f5d7fdf66e85c0f9d`.
 
-Evidence is under `.factory/evidence/polish-1/`.
+Evidence is under `.factory/evidence/polish-2/`.
 
 ## Run locally
 
@@ -56,18 +59,4 @@ Open <http://localhost:5173>. The isolated sample is <http://localhost:5173/?dem
 
 ## Known gaps and next steps
 
-At the end of polish round 1, no finding of any severity remained open.
-
-## Review round 2 — 2026-08-28
-
-Completed the requested adversarial first-read review without changing product code. Wrote `.factory/review-2.md` and committed the review documentation.
-
-Verification performed:
-
-- Fresh live Chromium checks at 390×844 and 1280×720.
-- One-click demo, reset, local-storage namespace, same-origin request log, offline service-worker 404, routes, metadata, and links.
-- Every exact command in `.factory/claims.json` from a fresh local clone after `npm ci`.
-- Local `npm test`, lint, typecheck, and production build.
-- Rechecked every finding in the earlier reviews, polish record, and verification records.
-
-Remaining review finding: `F-2-1` is a 25-word README sentence in **Test and build**, above the plain-words 22-word cap. The concrete rewrite is in `.factory/review-2.md`. The review verdict is FAIL until that documentation-only copy correction is made and rechecked.
+None. The cumulative review now has zero unresolved findings.
