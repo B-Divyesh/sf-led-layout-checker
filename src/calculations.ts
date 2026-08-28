@@ -14,7 +14,7 @@ export function totalWatts(layout: Layout): number {
 
 export function runChecks(layout: Layout): Check[] {
   if (!layout.segments.length) {
-    return [{ level: 'warn', title: 'No LED segments yet', detail: 'Draw a segment to start the preflight.' }];
+    return [{ level: 'warn', title: 'No LED segments yet', detail: 'Draw a segment to start the layout checks.' }];
   }
 
   const checks: Check[] = [];
@@ -23,9 +23,9 @@ export function runChecks(layout: Layout): Check[] {
     if (segment.injection === 'none') {
       checks.push({ level: 'warn', title: `${segment.name} has no power point`, detail: 'Set where power enters this segment.', segmentId: segment.id });
     } else if (segment.pixels >= 150 && segment.injection !== 'both') {
-      checks.push({ level: 'warn', title: `${segment.name} may need end injection`, detail: `${segment.pixels} pixels share one stated power point. Check wire size and voltage drop.`, segmentId: segment.id });
+      checks.push({ level: 'warn', title: `${segment.name} may need a far-end power point`, detail: `${segment.pixels} pixels share one stated power point. Check wire size and voltage drop.`, segmentId: segment.id });
     } else {
-      checks.push({ level: 'pass', title: `${segment.name} has a power assumption`, detail: `${amps.toFixed(1)} A estimated at the set brightness.`, segmentId: segment.id });
+      checks.push({ level: 'pass', title: `${segment.name} has power points marked`, detail: `${amps.toFixed(1)} A estimated at the set brightness.`, segmentId: segment.id });
     }
     if (!layout.controllers.some((controller) => controller.id === segment.controllerId)) {
       checks.push({ level: 'warn', title: `${segment.name} has no controller`, detail: 'Assign a controller before wiring data.', segmentId: segment.id });

@@ -1,63 +1,56 @@
-# Landing copy audit
+# Copy audit — polish round 1
 
-Audited 2026-08-28. Counts split contractions and hyphenated forms as one word. No line contains a banned marketing word. No sentence exceeds 22 words.
+Counted 2026-08-28. Contractions, hyphenated terms, prices, and inline code each count as one word. No landing sentence exceeds 22 words. No banned marketing word appears.
 
-| Copy | Words | Result |
+| Landing copy | Words | Claim or purpose |
 | --- | ---: | --- |
-| Preflight for addressable LED art | 5 | pass |
-| Plan LED strips before you solder | 6 | pass |
-| For hobbyists building large LED art who need clear data paths and power assumptions. | 14 | pass |
-| Try it with sample data | 5 | pass |
-| See a checked 480-pixel arch. | 5 | pass |
-| Plans stay in this browser. | 5 | pass |
-| Works offline after your first visit. | 6 | pass |
-| Core planning and SVG export are free. | 7 | pass |
-| Trace data from controller to the last pixel. | 8 | pass |
-| The preflight | 2 | pass |
-| See each assumption on one plan | 6 | pass |
-| Draw the shape. | 3 | pass |
-| Set pixel counts. | 3 | pass |
-| Mark power entry points. | 4 | pass |
-| The checks update as you work. | 6 | pass |
-| Start a blank plan | 4 | pass |
-| How it works | 3 | pass |
-| From sketch to labeled plan | 5 | pass |
-| Draw the paths | 3 | pass |
-| Click along each strip in its real data order. | 9 | pass |
-| State the power | 3 | pass |
-| Add pixel counts, supplies, and injection points. | 7 | pass |
-| Check and export | 3 | pass |
-| Resolve warnings, then download a labeled SVG. | 7 | pass |
-| Clear limits | 2 | pass |
-| A planning check, not electrical approval | 6 | pass |
-| Current figures use your pixel, brightness, and supply assumptions. | 9 | pass |
-| Confirm wire size, fusing, voltage drop, and mains work with qualified guidance. | 12 | pass |
-| Studio license | 2 | pass |
-| Plan larger builds for $12 once | 6 | pass |
-| Studio adds multiple controllers and a parts summary. | 8 | pass |
-| Checks and labeled SVG export stay free. | 7 | pass |
-| Sociobot and Dodo are the merchant of record. | 8 | pass |
-| Refunds are handled there and revoke the license. | 8 | pass |
-| Privacy | 1 | pass |
-| Terms | 1 | pass |
-| $12 | 1 | pass |
-| one-time purchase | 2 | pass |
-| Buy Studio | 2 | pass |
-| Restore a license | 3 | pass |
-| Plan LED paths before soldering. | 5 | pass |
-| Hero imagery was generated for this product. | 7 | pass |
+| Check addressable LED art before building | 6 | Context |
+| Plan LED strips before you solder | 6 | Job-first headline |
+| For hobbyists building large LED art who need clear data paths and marked power points. | 15 | Audience and outcome |
+| Try it with sample data | 5 | Primary action |
+| Open a checked 480-pixel arch. | 5 | `sample-preflight` |
+| Plans stay in this browser. | 5 | `local-only` |
+| Works offline after your first visit. | 6 | `offline-reload` |
+| Core planning and SVG export are free. | 7 | `segment-authoring`, `source-placement`, `svg-export` |
+| Trace data from the controller to the last pixel. | 9 | `segment-authoring`, `source-placement` |
+| Layout preview | 2 | Section label |
+| See data, current, and power on one plan | 8 | Section heading |
+| Draw the shape. | 3 | `segment-authoring` |
+| Set pixel counts. | 3 | `current-estimates` |
+| Mark power points. | 3 | `source-placement` |
+| The checks update as you work. | 6 | `live-checks` |
+| Start a blank plan | 4 | Action |
+| How it works | 3 | Section label |
+| From sketch to labeled plan | 5 | Section heading |
+| Draw the paths | 3 | Step heading |
+| Click along each strip in its real data order. | 9 | `segment-authoring` |
+| Add power details | 3 | Step heading |
+| Add pixel counts, supplies, and power points. | 7 | `current-estimates`, `source-placement` |
+| Check and export | 3 | Step heading |
+| Resolve warnings, then download a labeled SVG. | 7 | `svg-export` |
+| Clear limits | 2 | Section label |
+| A planning check, not electrical approval | 6 | Safety limit |
+| Current figures use your pixel count, brightness, and supply details. | 10 | `current-estimates` |
+| Confirm wire size, fusing, voltage drop, and mains work with qualified guidance. | 12 | Safety limit |
+| Studio license | 2 | Section label |
+| Plan larger builds for $12 once | 6 | `studio-checkout` |
+| Studio adds multiple controllers and a parts summary. | 8 | `studio-license` |
+| Checks and labeled SVG export stay free. | 7 | `preflight-rules`, `svg-export` |
+| Checkout runs through Sociobot. | 4 | `studio-checkout` |
+| Dodo is the merchant of record and handles payment and refunds. | 11 | `studio-checkout` |
+| Buy Studio | 2 | Action |
+| Restore a license | 3 | Action |
+| Plan LED paths before soldering. | 5 | Footer summary |
+| Hero imagery was generated for this product. | 7 | Provenance |
 
 ## Terminology
 
-| Concept | One word used |
+| Concept | One public term |
 | --- | --- |
-| A continuous LED run | segment |
-| Directional signal source | controller |
-| DC power source | supply |
-| Where power joins a segment | power point |
-| Saved drawing and assumptions | plan |
-| Check results that need attention | warnings |
-| Licensed capability set | Studio |
-| Downloaded drawing | labeled SVG |
-
-Catalog description: “Plan LED strips, trace data flow, and catch power gaps before soldering.” (11 words, 72 characters)
+| Addressable light run | segment |
+| Place where electrical power enters a segment | power point |
+| Automated plan result | check |
+| Editable portable file | plan JSON |
+| Final drawing | labeled SVG |
+| Paid capability | Studio |
+| Isolated sample workspace | demo |

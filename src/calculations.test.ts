@@ -30,7 +30,7 @@ describe('current estimates', () => {
     const titles = runChecks(layout).map((check) => check.title);
 
     expect(titles).toContain('Ground run has no power point');
-    expect(titles).toContain('Arch right may need end injection');
+    expect(titles).toContain('Arch right may need a far-end power point');
     expect(titles).toContain('Arch left has no controller');
     expect(titles).toContain('Supply A voltage does not match');
     expect(titles).toContain('Supply headroom is low');

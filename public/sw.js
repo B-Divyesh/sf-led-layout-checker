@@ -1,5 +1,6 @@
-const CACHE = 'led-layout-checker-v8';
-const SHELL = ['/', '/favicon.svg', '/manifest.webmanifest', '/icon-192.png', '/assets/hero-routing-600.webp'];
+const CACHE = 'led-layout-checker-v9';
+const SHELL = ['/', '/404.html', '/404.css', '/favicon.svg', '/manifest.webmanifest', '/icon-192.png', '/assets/hero-routing-600.webp'];
+const APP_PATHS = new Set(['/', '/planner', '/demo', '/privacy', '/terms']);
 
 const SECURITY_HEADERS = {
   'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self' https://api.sociobot.in; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://api.sociobot.in; frame-ancestors 'none'",
@@ -47,7 +48,23 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
   if (event.request.mode === 'navigate') {
-    event.respondWith(caches.match('/').then((shell) => shell || fetch('/')));
+    const path = new URL(event.request.url).pathname.replace(/\/$/, '') || '/';
+    if (!APP_PATHS.has(path)) {
+      event.respondWith((async () => {
+        const cached = await caches.match('/404.html');
+        const body = cached ? await cached.text() : '<!doctype html><title>Page not found</title><h1>This path does not connect</h1>';
+        const headers = cached ? cached.headers : new Headers({ 'Content-Type': 'text/html; charset=utf-8' });
+        return new Response(body, { status: 404, statusText: 'Not Found', headers });
+      })());
+      return;
+    }
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(event.request);
+        if (response.ok) return response;
+      } catch { /* Fall through to the cached app shell. */ }
+      return (await caches.match('/')) || fetch('/');
+    })());
     return;
   }
   event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {

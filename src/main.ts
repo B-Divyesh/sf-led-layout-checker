@@ -7,7 +7,9 @@ const REAL_KEY = 'led-layout-checker:layout:v1';
 const DEMO_KEY = 'demo:led-layout-checker:layout:v1';
 const LICENSE_KEY = 'sb_license:led-layout-checker';
 const LICENSE_CACHE_KEY = 'sb_license_check:led-layout-checker';
-const BUILD_ID = 'v1.0.3';
+const DEMO_LICENSE_KEY = 'demo:sb_license:led-layout-checker';
+const DEMO_LICENSE_CACHE_KEY = 'demo:sb_license_check:led-layout-checker';
+const BUILD_ID = 'v1.1.0';
 const BILLING_BASE = 'https://api.sociobot.in/api/v1/products/led-layout-checker';
 const palette = ['#168a67', '#d45a49', '#a66f00', '#5368c9', '#8a4ba3'];
 
@@ -17,12 +19,14 @@ let layout: Layout = emptyLayout();
 let demoMode = false;
 let activeTool: Tool = 'select';
 let activeSegmentId = '';
+let selectedItem = '';
 let drawingPoints: Point[] = [];
 let motionPaused = false;
 let undoStack: Layout[] = [];
 let paid = false;
 let licenseNotice = '';
 let saveTimer = 0;
+let pendingImport: Layout | null = null;
 
 function escapeHtml(value: string | number): string {
   return String(value)
@@ -75,13 +79,23 @@ function snapshot(): void {
   if (undoStack.length > 30) undoStack.shift();
 }
 
-function isPlannerPath(path = location.pathname): boolean {
+function routePath(): string {
+  if (new URLSearchParams(location.search).get('demo') === '1') return '/demo';
+  return location.pathname.replace(/\/$/, '') || '/';
+}
+
+function isPlannerPath(path = routePath()): boolean {
   return path === '/planner' || path === '/demo';
+}
+
+function licenseKeys(): [string, string] {
+  return demoMode ? [DEMO_LICENSE_KEY, DEMO_LICENSE_CACHE_KEY] : [LICENSE_KEY, LICENSE_CACHE_KEY];
 }
 
 function navigate(path: string): void {
   history.pushState({}, '', path);
   renderRoute();
+  void checkStoredLicense();
 }
 
 function header(): string {
@@ -94,7 +108,7 @@ function header(): string {
       </a>
       <nav aria-label="Main navigation">
         <a href="/planner" data-link>Planner</a>
-        <a href="/demo" data-link>Demo</a>
+        <a href="/?demo=1" data-link>Demo</a>
         <a href="/privacy" data-link>Privacy</a>
       </nav>
     </header>`;
@@ -112,12 +126,12 @@ function landing(): string {
   return `${header()}<main id="main" tabindex="-1">
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Preflight for addressable LED art</p>
+        <p class="eyebrow">Check addressable LED art before building</p>
         <h1 tabindex="-1">Plan LED strips before you solder</h1>
-        <p class="lede">For hobbyists building large LED art who need clear data paths and power assumptions.</p>
+        <p class="lede">For hobbyists building large LED art who need clear data paths and marked power points.</p>
         <div class="hero-action">
-          <a class="button primary" href="/demo" data-link>Try it with sample data</a>
-          <span>See a checked 480-pixel arch.</span>
+          <a class="button primary" href="/?demo=1" data-link>Try it with sample data</a>
+          <span>Open a checked 480-pixel arch.</span>
         </div>
         <ul class="plain-facts" aria-label="Product facts">
           <li><span aria-hidden="true">⌂</span> Plans stay in this browser.</li>
@@ -130,14 +144,14 @@ function landing(): string {
           <source srcset="/assets/hero-routing-600.webp 600w, /assets/hero-routing.webp 1200w" sizes="(max-width: 700px) calc(100vw - 32px), 48vw" type="image/webp" />
           <img src="/assets/hero-routing.png" srcset="/assets/hero-routing-600.png 600w, /assets/hero-routing.png 1200w" sizes="(max-width: 700px) calc(100vw - 32px), 48vw" width="1200" height="800" fetchpriority="high" alt="An abstract LED sculpture plan with mint paths, amber nodes, and coral power branches." />
         </picture>
-        <figcaption>Trace data from controller to the last pixel.</figcaption>
+        <figcaption>Trace data from the controller to the last pixel.</figcaption>
       </figure>
     </section>
     <section class="preview-band" aria-labelledby="preview-title">
       <div>
-        <p class="eyebrow">The preflight</p>
-        <h2 id="preview-title">See each assumption on one plan</h2>
-        <p>Draw the shape. Set pixel counts. Mark power entry points. The checks update as you work.</p>
+        <p class="eyebrow">Layout preview</p>
+        <h2 id="preview-title">See data, current, and power on one plan</h2>
+        <p>Draw the shape. Set pixel counts. Mark power points. The checks update as you work.</p>
         <a class="text-link" href="/planner" data-link>Start a blank plan →</a>
       </div>
       ${miniPreview()}
@@ -147,20 +161,20 @@ function landing(): string {
       <h2 id="steps-title">From sketch to labeled plan</h2>
       <ol>
         <li><span>01</span><h3>Draw the paths</h3><p>Click along each strip in its real data order.</p></li>
-        <li><span>02</span><h3>State the power</h3><p>Add pixel counts, supplies, and injection points.</p></li>
+        <li><span>02</span><h3>Add power details</h3><p>Add pixel counts, supplies, and power points.</p></li>
         <li><span>03</span><h3>Check and export</h3><p>Resolve warnings, then download a labeled SVG.</p></li>
       </ol>
     </section>
     <section class="limits" aria-labelledby="limits-title">
       <div><p class="eyebrow">Clear limits</p><h2 id="limits-title">A planning check, not electrical approval</h2></div>
-      <p>Current figures use your pixel, brightness, and supply assumptions. Confirm wire size, fusing, voltage drop, and mains work with qualified guidance.</p>
+        <p>Current figures use your pixel count, brightness, and supply details. Confirm wire size, fusing, voltage drop, and mains work with qualified guidance.</p>
     </section>
     <section class="pricing" aria-labelledby="pricing-title">
       <div>
         <p class="eyebrow">Studio license</p>
         <h2 id="pricing-title">Plan larger builds for $12 once</h2>
         <p>Studio adds multiple controllers and a parts summary. Checks and labeled SVG export stay free.</p>
-        <p>Sociobot and Dodo are the merchant of record. Refunds are handled there and revoke the license.</p>
+        <p>Checkout runs through Sociobot. Dodo is the merchant of record and handles payment and refunds.</p>
         <p><a href="/privacy" data-link>Privacy</a> · <a href="/terms" data-link>Terms</a></p>
       </div>
       <div class="price-action"><strong>$12</strong><span>one-time purchase</span><a class="button light" href="${BILLING_BASE}/checkout">Buy Studio</a><a class="text-link" href="/planner#studio-title" data-link>Restore a license</a></div>
@@ -193,10 +207,11 @@ function planner(): string {
   const warningCount = checks.filter((check) => check.level === 'warn').length;
   const active = layout.segments.find((segment) => segment.id === activeSegmentId) ?? layout.segments[0];
   if (active && !activeSegmentId) activeSegmentId = active.id;
+  if (!selectedItem) selectedItem = active ? `segment:${active.id}` : layout.controllers[0] ? `controller:${layout.controllers[0].id}` : '';
   return `${header()}${demoMode ? demoBanner() : ''}<main id="main" class="planner-page" tabindex="-1">
     <section class="planner-heading">
-      <div><p class="eyebrow">Layout workspace</p><h1 tabindex="-1">Check your LED layout</h1><p>Edit the plan, then work through every marked assumption.</p></div>
-      <div class="heading-actions"><span id="save-status" role="status">Changes save in this browser</span><button id="undo" ${undoStack.length ? '' : 'disabled'}>Undo</button><button class="primary" id="export-svg">Export labeled SVG</button></div>
+      <div><p class="eyebrow">Layout workspace</p><h1 tabindex="-1">Check your LED layout</h1><p>Edit the plan, then review each warning.</p></div>
+      <div class="heading-actions"><span id="save-status" role="status">Changes save in this browser</span><button id="undo" ${undoStack.length ? '' : 'disabled'}>Undo</button><button id="export-plan">Export plan JSON</button><button id="import-trigger">Import plan JSON</button><input id="import-plan" hidden type="file" accept="application/json,.json" aria-label="Choose plan JSON file" /><button class="primary" id="export-svg">Export labeled SVG</button><p id="import-message" class="action-message" role="status" aria-live="polite"></p></div>
     </section>
     <section class="workspace" aria-label="LED layout editor">
       <div class="tool-rail" aria-labelledby="tools-title">
@@ -217,6 +232,7 @@ function planner(): string {
       <div class="plan-wrap">
         <div class="plan-toolbar">
           <label>Plan name<input id="layout-name" value="${escapeHtml(layout.name)}" maxlength="70" /></label>
+          <label>Select plan item<select id="plan-item-select">${planItemOptions()}</select></label>
           <button id="motion-toggle" aria-pressed="${motionPaused}">${motionPaused ? 'Play data flow' : 'Pause data flow'}</button>
         </div>
         <div id="plan-canvas" class="plan-canvas" tabindex="0" role="group" aria-label="LED layout plan" aria-describedby="plan-description">
@@ -226,14 +242,14 @@ function planner(): string {
         <p class="canvas-help">Choose Segment, Controller, or Supply. Then click the plan. Use the coordinate controls for keyboard placement.</p>
       </div>
       <section class="check-panel" aria-labelledby="checks-title">
-        <div class="check-title"><div><p class="eyebrow">Live preflight</p><h2 id="checks-title">${warningCount ? `${warningCount} ${warningCount === 1 ? 'warning' : 'warnings'}` : 'Ready to review'}</h2></div><span class="check-count ${warningCount ? 'has-warnings' : ''}">${warningCount ? '!' : '✓'}</span></div>
+        <div class="check-title"><div><p class="eyebrow">Live checks</p><h2 id="checks-title">${warningCount ? `${warningCount} ${warningCount === 1 ? 'warning' : 'warnings'}` : 'Ready to review'}</h2></div><span class="check-count ${warningCount ? 'has-warnings' : ''}">${warningCount ? '!' : '✓'}</span></div>
         <dl class="totals"><div><dt>Pixels</dt><dd>${layout.segments.reduce((n, segment) => n + segment.pixels, 0)}</dd></div><div><dt>Current</dt><dd>${totalCurrent(layout).toFixed(1)} A</dd></div><div><dt>Power</dt><dd>${totalWatts(layout).toFixed(0)} W</dd></div></dl>
-        <ul class="check-list" tabindex="0" aria-label="Preflight results">${checks.map((check) => `<li class="${check.level}"><span aria-hidden="true">${check.level === 'pass' ? '✓' : '!'}</span><div><strong>${escapeHtml(check.title)}</strong><p>${escapeHtml(check.detail)}</p></div></li>`).join('')}</ul>
+        <ul class="check-list" tabindex="0" aria-label="Layout check results">${checks.map((check) => `<li class="${check.level}"><span aria-hidden="true">${check.level === 'pass' ? '✓' : '!'}</span><div><strong>${escapeHtml(check.title)}</strong><p>${escapeHtml(check.detail)}</p></div></li>`).join('')}</ul>
         <p class="safety-note"><strong>Estimate only.</strong> Confirm wire size, fusing, voltage drop, and mains work with qualified guidance.</p>
       </section>
     </section>
     <section class="setup" aria-labelledby="setup-title">
-      <div class="setup-heading"><div><p class="eyebrow">Plan details</p><h2 id="setup-title">Set the assumptions</h2></div><p>Current uses the values below. A 20% supply margin appears in the checks.</p></div>
+      <div class="setup-heading"><div><p class="eyebrow">Plan details</p><h2 id="setup-title">Set the plan details</h2></div><p>Current uses the values below. A 20% supply margin appears in the checks.</p></div>
       <div class="setup-grid">
         <fieldset><legend>Whole plan</legend>
           <label>LED voltage<select id="voltage"><option value="5" ${layout.voltage === 5 ? 'selected' : ''}>5 V</option><option value="12" ${layout.voltage === 12 ? 'selected' : ''}>12 V</option></select></label>
@@ -249,7 +265,24 @@ function planner(): string {
       </div>
     </section>
     ${studioSection()}
+    <dialog id="import-dialog" aria-labelledby="import-title" aria-describedby="import-preview">
+      <h2 id="import-title">Replace this plan?</h2>
+      <p id="import-preview"></p>
+      <p>The imported plan replaces the current ${demoMode ? 'demo' : 'saved'} plan. You can undo the replacement until you leave this page.</p>
+      <div><button id="cancel-import">Keep current plan</button><button class="primary" id="confirm-import">Replace with imported plan</button></div>
+    </dialog>
   </main>${footer()}<div id="toast" class="toast" role="status" aria-live="polite"></div>`;
+}
+
+function planItemOptions(): string {
+  const options = [
+    ...layout.segments.map((item) => [`segment:${item.id}`, `Segment: ${item.name}`]),
+    ...layout.controllers.map((item) => [`controller:${item.id}`, `Controller: ${item.name}`]),
+    ...layout.supplies.map((item) => [`supply:${item.id}`, `Supply: ${item.name}`]),
+  ];
+  return options.length
+    ? options.map(([value, label]) => `<option value="${escapeHtml(value)}" ${selectedItem === value ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('')
+    : '<option value="">No plan items yet</option>';
 }
 
 function segmentFields(segment: Segment): string {
@@ -258,14 +291,14 @@ function segmentFields(segment: Segment): string {
     <label>Pixel count<input id="segment-pixels" type="number" min="1" max="5000" value="${segment.pixels}" /></label>
     ${layout.controllers.length ? `<label>Controller<select id="segment-controller">${layout.controllers.map((controller) => `<option value="${controller.id}" ${controller.id === segment.controllerId ? 'selected' : ''}>${escapeHtml(controller.name)}</option>`).join('')}</select></label>` : '<p class="field-result">Place a controller to restore the data route.</p>'}
     <label>Data direction<select id="segment-direction"><option value="forward" ${segment.direction === 'forward' ? 'selected' : ''}>Start → end</option><option value="reverse" ${segment.direction === 'reverse' ? 'selected' : ''}>End → start</option></select></label>
-    <label>Power enters<select id="segment-injection"><option value="none" ${segment.injection === 'none' ? 'selected' : ''}>Not marked</option><option value="start" ${segment.injection === 'start' ? 'selected' : ''}>Data start</option><option value="both" ${segment.injection === 'both' ? 'selected' : ''}>Both ends</option></select></label>
+    <label>Power points<select id="segment-injection"><option value="none" ${segment.injection === 'none' ? 'selected' : ''}>Not marked</option><option value="start" ${segment.injection === 'start' ? 'selected' : ''}>At data start</option><option value="both" ${segment.injection === 'both' ? 'selected' : ''}>At both ends</option></select></label>
     <p class="field-result">Estimated segment current: <strong>${segmentCurrent(segment, layout).toFixed(1)} A</strong></p>
     <button id="remove-segment" class="remove-source">Remove ${escapeHtml(segment.name)}</button>`;
 }
 
 function studioSection(): string {
   return `<section class="studio-panel" aria-labelledby="studio-title">
-    <div><p class="eyebrow">Optional Studio</p><h2 id="studio-title" tabindex="-1">Multiple controllers and a parts summary</h2><p>$12 once. The free planner keeps its checks and labeled SVG export.</p><p>Sociobot and Dodo are the merchant of record. Refunds are handled there and revoke the license.</p><p><a href="/privacy" data-link>Privacy</a> · <a href="/terms" data-link>Terms</a></p></div>
+    <div><p class="eyebrow">Optional Studio</p><h2 id="studio-title" tabindex="-1">Multiple controllers and a parts summary</h2><p>$12 once. The free planner keeps its checks and labeled SVG export.</p><p>Checkout runs through Sociobot. Dodo is the merchant of record and handles payment and refunds.</p><p><a href="/privacy" data-link>Privacy</a> · <a href="/terms" data-link>Terms</a></p></div>
     <div class="studio-actions">${paid ? `<span class="license-active">✓ Studio active</span><button id="export-summary">Export parts summary</button>` : `<a class="button light" href="${BILLING_BASE}/checkout">Buy Studio for $12</a>${licenseNotice ? `<p class="license-notice">${escapeHtml(licenseNotice)}</p>` : ''}<details><summary>Have a license?</summary><p id="license-requirement">Paste the token from your purchase email.</p><label>License token<input id="license-token" autocomplete="off" required aria-describedby="license-requirement license-message" /></label><button id="verify-license">Verify license</button><p id="license-message" role="status" aria-live="polite"></p></details>`}</div>
   </section>`;
 }
@@ -289,7 +322,7 @@ function planSvg(value: Layout): string {
     const first = points[0];
     const last = points.at(-1)!;
     const color = palette[index % palette.length];
-    return `<g class="plan-segment ${segment.id === activeSegmentId ? 'selected' : ''}" data-segment-id="${segment.id}">
+    return `<g class="plan-segment ${selectedItem === `segment:${segment.id}` ? 'selected' : ''}" data-select-item="segment:${segment.id}">
       <polyline points="${coords}" stroke="${color}" marker-end="url(#arrow-${index % palette.length})" />
       ${points.map((point, pointIndex) => `<circle cx="${point.x * 10}" cy="${point.y * 6}" r="${pointIndex === 0 ? 7 : 4}" fill="${color}" />`).join('')}
       <circle class="data-spark ${motionPaused ? 'paused' : ''}" cx="${first.x * 10}" cy="${first.y * 6}" r="7" fill="#ffd166"><animateMotion dur="2.4s" repeatCount="indefinite" path="${polylinePath(points)}" /></circle>
@@ -299,8 +332,8 @@ function planSvg(value: Layout): string {
     </g>`;
   }).join('');
   const drawing = drawingPoints.length ? `<g class="drawing-segment"><polyline points="${drawingPoints.map((point) => `${point.x * 10},${point.y * 6}`).join(' ')}"/>${drawingPoints.map((point) => `<circle cx="${point.x * 10}" cy="${point.y * 6}" r="6"/>`).join('')}</g>` : '';
-  const controllers = value.controllers.map((controller) => `<g class="controller-shape"><polygon points="${hexPoints(controller.point.x * 10, controller.point.y * 6, 15)}"/><text x="${controller.point.x * 10 + 20}" y="${controller.point.y * 6 + 5}">${escapeHtml(controller.name)}</text></g>`).join('');
-  const supplies = value.supplies.map((supply) => `<g class="supply-shape"><path d="M${supply.point.x * 10} ${supply.point.y * 6 - 14}l14 14-14 14-14-14z"/><text x="${supply.point.x * 10 + 20}" y="${supply.point.y * 6 + 5}">${escapeHtml(supply.name)} · ${supply.amps}A</text></g>`).join('');
+  const controllers = value.controllers.map((controller) => `<g class="controller-shape ${selectedItem === `controller:${controller.id}` ? 'selected' : ''}" data-select-item="controller:${controller.id}"><polygon points="${hexPoints(controller.point.x * 10, controller.point.y * 6, 15)}"/><text x="${controller.point.x * 10 + 20}" y="${controller.point.y * 6 + 5}">${escapeHtml(controller.name)}</text></g>`).join('');
+  const supplies = value.supplies.map((supply) => `<g class="supply-shape ${selectedItem === `supply:${supply.id}` ? 'selected' : ''}" data-select-item="supply:${supply.id}"><path d="M${supply.point.x * 10} ${supply.point.y * 6 - 14}l14 14-14 14-14-14z"/><text x="${supply.point.x * 10 + 20}" y="${supply.point.y * 6 + 5}">${escapeHtml(supply.name)} · ${supply.amps}A</text></g>`).join('');
   return `<svg viewBox="0 0 1000 600" aria-hidden="true"><defs>${markerDefs}<pattern id="small-grid" width="25" height="25" patternUnits="userSpaceOnUse"><path d="M25 0H0V25" fill="none" stroke="#d7d3c3" stroke-width="1"/></pattern></defs><rect width="1000" height="600" fill="#f5f1df"/><rect width="1000" height="600" fill="url(#small-grid)"/>${segments}${drawing}${controllers}${supplies}</svg>`;
 }
 
@@ -327,11 +360,11 @@ function legalPage(kind: 'privacy' | 'terms'): string {
   return `${header()}<main id="main" class="text-page" tabindex="-1"><p class="eyebrow">${privacy ? 'Privacy' : 'Terms'}</p><h1 tabindex="-1">${title}</h1>${privacy ? `
     <p>LED Layout Checker stores your plan and license token in this browser. It does not send plan data to our servers.</p>
     <h2>What leaves your browser</h2><p>Opening checkout or verifying a license contacts the Sociobot billing service. Plan data is not included.</p><p>A stored verdict is reused for one day.</p>
-    <h2>Demo data</h2><p>Demo changes use a separate browser key. “Start for real” removes that demo copy.</p>
+    <h2>Demo data</h2><p>Demo plans and licenses use separate browser keys. Demo mode never reads or changes your saved plan or license.</p><p>“Reset demo” restores the sample and clears demo licenses. “Start for real” clears every demo key and opens your saved plan, or a blank plan if you have none.</p>
     <h2>Delete your data</h2><p>Clear this site’s browser storage to remove plans and license data.</p>` : `
     <p>This tool provides conservative estimates from the values you enter. It is not electrical advice or certification.</p>
     <h2>Your responsibility</h2><p>Confirm supply sizing, wire gauge, fusing, voltage drop, connectors, and mains work with qualified guidance.</p>
-    <h2>Studio purchase</h2><p>Studio is a $12 one-time license. Sociobot and Dodo are the merchant of record. Approved refunds revoke the license.</p>
+    <h2>Studio purchase</h2><p>Studio is a $12 one-time license. Checkout runs through Sociobot. Dodo is the merchant of record and handles payment and refunds.</p>
     <h2>No warranty</h2><p>The software is provided “as is” under the MIT License. Stop if a check conflicts with qualified advice.</p>`}<a class="button primary" href="/planner" data-link>Open the planner</a></main>${footer()}`;
 }
 
@@ -340,8 +373,15 @@ function notFound(): string {
 }
 
 function renderRoute(focusHeading = true): void {
-  const path = location.pathname.replace(/\/$/, '') || '/';
-  demoMode = path === '/demo' || new URLSearchParams(location.search).get('demo') === '1';
+  const path = routePath();
+  const nextDemoMode = path === '/demo';
+  if (nextDemoMode !== demoMode) {
+    paid = false;
+    licenseNotice = '';
+    activeSegmentId = '';
+    selectedItem = '';
+  }
+  demoMode = nextDemoMode;
   if (isPlannerPath(path)) layout = loadLayout();
   const pages: Record<string, () => string> = {
     '/': landing,
@@ -351,8 +391,14 @@ function renderRoute(focusHeading = true): void {
     '/terms': () => legalPage('terms'),
   };
   app.innerHTML = (pages[path] ?? notFound)();
-  document.title = path === '/' ? 'LED Layout Checker — plan strips before soldering' : path === '/demo' ? 'Demo — LED Layout Checker' : path === '/privacy' ? 'Privacy — LED Layout Checker' : path === '/terms' ? 'Terms — LED Layout Checker' : path === '/planner' ? 'Planner — LED Layout Checker' : 'Page not found — LED Layout Checker';
-  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute('href', `https://led-layout-checker.sociobot.in${path}`);
+  const metadata = routeMetadata(path);
+  document.title = metadata.title;
+  document.querySelector<HTMLMetaElement>('meta[name="description"]')?.setAttribute('content', metadata.description);
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute('href', metadata.canonical);
+  document.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.setAttribute('content', metadata.title);
+  document.querySelector<HTMLMetaElement>('meta[property="og:description"]')?.setAttribute('content', metadata.description);
+  document.querySelector<HTMLMetaElement>('meta[name="twitter:title"]')?.setAttribute('content', metadata.title);
+  document.querySelector<HTMLMetaElement>('meta[name="twitter:description"]')?.setAttribute('content', metadata.description);
   bindCommon();
   if (isPlannerPath(path)) bindPlanner();
   if (focusHeading) requestAnimationFrame(() => {
@@ -363,6 +409,19 @@ function renderRoute(focusHeading = true): void {
     const status = document.querySelector<HTMLElement>('#route-status');
     if (status) status.textContent = heading?.textContent ?? 'Page changed';
   });
+}
+
+function routeMetadata(path: string): { title: string; description: string; canonical: string } {
+  const values: Record<string, [string, string]> = {
+    '/': ['LED Layout Checker — plan strips before soldering', 'Draw LED paths, check current and power points, then export a labeled plan before soldering.'],
+    '/planner': ['Planner — LED Layout Checker', 'Draw LED strips, place controllers and supplies, check power points, and export your plan.'],
+    '/demo': ['Demo — LED Layout Checker', 'Try a checked 480-pixel garden arch with isolated sample data.'],
+    '/privacy': ['Privacy — LED Layout Checker', 'See what LED Layout Checker stores in your browser and when the billing service is contacted.'],
+    '/terms': ['Terms — LED Layout Checker', 'Read the planning limits and Studio purchase terms for LED Layout Checker.'],
+  };
+  const [title, description] = values[path] ?? ['Page not found — LED Layout Checker', 'This LED Layout Checker page does not exist. Return to the planner.'];
+  const canonicalPath = path === '/demo' ? '/demo' : path;
+  return { title, description, canonical: `https://led-layout-checker.sociobot.in${canonicalPath}` };
 }
 
 function bindCommon(): void {
@@ -393,6 +452,12 @@ function bindPlanner(): void {
     renderRoute(false);
   }));
   document.querySelector('#plan-canvas')?.addEventListener('click', placeFromPointer);
+  document.querySelectorAll<SVGElement>('[data-select-item]').forEach((item) => item.addEventListener('click', (event) => {
+    if (activeTool !== 'select') return;
+    event.stopPropagation();
+    const value = item.dataset.selectItem;
+    if (value) selectPlanItem(value, false);
+  }));
   document.querySelector('#add-point')?.addEventListener('click', () => {
     const xInput = document.querySelector<HTMLInputElement>('#point-x');
     const yInput = document.querySelector<HTMLInputElement>('#point-y');
@@ -419,12 +484,31 @@ function bindPlanner(): void {
     renderRoute(false);
   });
   document.querySelector('#reset-demo')?.addEventListener('click', () => {
-    localStorage.removeItem(DEMO_KEY); layout = sampleLayout(); undoStack = []; saveLayout('Demo reset'); renderRoute(false);
+    clearDemoStorage();
+    paid = false;
+    licenseNotice = '';
+    layout = sampleLayout();
+    undoStack = [];
+    activeSegmentId = layout.segments[0].id;
+    selectedItem = `segment:${activeSegmentId}`;
+    saveLayout('Demo reset');
+    renderRoute(false);
   });
   document.querySelector('#start-real')?.addEventListener('click', () => {
-    localStorage.removeItem(DEMO_KEY); navigate('/planner');
+    clearDemoStorage();
+    paid = false;
+    licenseNotice = '';
+    activeSegmentId = '';
+    selectedItem = '';
+    navigate('/planner');
   });
   document.querySelector('#export-svg')?.addEventListener('click', exportSvg);
+  document.querySelector('#export-plan')?.addEventListener('click', exportPlan);
+  const importInput = document.querySelector<HTMLInputElement>('#import-plan');
+  document.querySelector('#import-trigger')?.addEventListener('click', () => importInput?.click());
+  importInput?.addEventListener('change', () => { void prepareImport(importInput); });
+  document.querySelector('#cancel-import')?.addEventListener('click', closeImportDialog);
+  document.querySelector('#confirm-import')?.addEventListener('click', confirmImport);
   document.querySelector('#export-summary')?.addEventListener('click', exportSummary);
   document.querySelector('#motion-toggle')?.addEventListener('click', () => { motionPaused = !motionPaused; renderRoute(false); });
   document.querySelector('#add-controller')?.addEventListener('click', () => {
@@ -442,13 +526,20 @@ function bindPlanner(): void {
     updateAndRender(() => {
       layout.segments = layout.segments.filter((segment) => segment.id !== removedId);
       activeSegmentId = layout.segments[0]?.id ?? '';
+      selectedItem = activeSegmentId ? `segment:${activeSegmentId}` : '';
     });
   });
   document.querySelectorAll<HTMLButtonElement>('[data-remove-controller]').forEach((button) => button.addEventListener('click', () => {
-    updateAndRender(() => { layout.controllers = layout.controllers.filter((controller) => controller.id !== button.dataset.removeController); });
+    updateAndRender(() => {
+      layout.controllers = layout.controllers.filter((controller) => controller.id !== button.dataset.removeController);
+      if (selectedItem === `controller:${button.dataset.removeController}`) selectedItem = layout.segments[0] ? `segment:${layout.segments[0].id}` : '';
+    });
   }));
   document.querySelectorAll<HTMLButtonElement>('[data-remove-supply]').forEach((button) => button.addEventListener('click', () => {
-    updateAndRender(() => { layout.supplies = layout.supplies.filter((supply) => supply.id !== button.dataset.removeSupply); });
+    updateAndRender(() => {
+      layout.supplies = layout.supplies.filter((supply) => supply.id !== button.dataset.removeSupply);
+      if (selectedItem === `supply:${button.dataset.removeSupply}`) selectedItem = layout.segments[0] ? `segment:${layout.segments[0].id}` : '';
+    });
   }));
   document.querySelector('#verify-license')?.addEventListener('click', restoreLicense);
   bindInputs();
@@ -464,6 +555,7 @@ function bindInputs(): void {
   set('#brightness', 'change', (target) => updateAndRender(() => { layout.brightness = clamp(Number(target.value), 1, 100); }));
   set('#brightness', 'input', (target) => { const output = document.querySelector('#brightness-output'); if (output) output.textContent = `${target.value}%`; });
   set('#active-segment', 'change', (target) => { activeSegmentId = target.value; renderRoute(false); });
+  set('#plan-item-select', 'change', (target) => selectPlanItem(target.value, true));
   set('#segment-name', 'change', (target) => changeSegment((segment) => { segment.name = target.value.trim() || 'LED segment'; }));
   set('#segment-pixels', 'change', (target) => changeSegment((segment) => { segment.pixels = clamp(Number(target.value), 1, 5000); }));
   set('#segment-controller', 'change', (target) => changeSegment((segment) => { segment.controllerId = target.value; }));
@@ -486,7 +578,12 @@ function changeSegment(action: (segment: Segment) => void): void {
 }
 
 function placeFromPointer(event: Event): void {
-  if (activeTool === 'select') return;
+  if (activeTool === 'select') {
+    const item = (event.target as Element).closest<SVGElement>('[data-select-item]')?.dataset.selectItem;
+    if (item) selectPlanItem(item, false);
+    else toast('Choose a path, controller, or supply on the plan.');
+    return;
+  }
   const pointer = event as MouseEvent;
   const box = (event.currentTarget as HTMLElement).getBoundingClientRect();
   placeAt({ x: clamp(Math.round((pointer.clientX - box.left) / box.width * 100), 0, 100), y: clamp(Math.round((pointer.clientY - box.top) / box.height * 100), 0, 100) });
@@ -501,6 +598,7 @@ function placeAt(point: Point): void {
     updateAndRender(() => {
       const id = crypto.randomUUID();
       layout.controllers.push({ id, name: `Controller ${layout.controllers.length + 1}`, point });
+      selectedItem = `controller:${id}`;
       if (layout.controllers.length === 1) {
         layout.segments.forEach((segment) => {
           if (!segment.controllerId || !layout.controllers.some((controller) => controller.id === segment.controllerId)) segment.controllerId = id;
@@ -508,7 +606,11 @@ function placeAt(point: Point): void {
       }
     });
   } else if (activeTool === 'supply') {
-    updateAndRender(() => layout.supplies.push({ id: crypto.randomUUID(), name: `Supply ${layout.supplies.length + 1}`, point, volts: layout.voltage, amps: 10 }));
+    updateAndRender(() => {
+      const id = crypto.randomUUID();
+      layout.supplies.push({ id, name: `Supply ${layout.supplies.length + 1}`, point, volts: layout.voltage, amps: 10 });
+      selectedItem = `supply:${id}`;
+    });
   } else {
     toast('Choose what to place first.');
   }
@@ -519,8 +621,30 @@ function finishSegment(): void {
   const id = crypto.randomUUID();
   updateAndRender(() => {
     layout.segments.push({ id, name: `Segment ${layout.segments.length + 1}`, points: [...drawingPoints], pixels: 60, color: palette[layout.segments.length % palette.length], direction: 'forward', injection: 'none', controllerId: layout.controllers[0]?.id ?? '' });
-    activeSegmentId = id; drawingPoints = []; activeTool = 'select';
+    activeSegmentId = id; selectedItem = `segment:${id}`; drawingPoints = []; activeTool = 'select';
   });
+}
+
+function selectPlanItem(value: string, focusControl: boolean): void {
+  selectedItem = value;
+  const [kind, id] = value.split(':');
+  if (kind === 'segment') activeSegmentId = id;
+  renderRoute(false);
+  requestAnimationFrame(() => {
+    const target = kind === 'segment'
+      ? document.querySelector<HTMLElement>('#segment-name')
+      : kind === 'controller'
+        ? document.querySelector<HTMLElement>(`[data-controller-name="${CSS.escape(id)}"]`)
+        : document.querySelector<HTMLElement>(`[data-supply-amps="${CSS.escape(id)}"]`);
+    if (focusControl) target?.focus();
+    toast(`${kind === 'segment' ? 'Segment' : kind === 'controller' ? 'Controller' : 'Supply'} selected.`);
+  });
+}
+
+function clearDemoStorage(): void {
+  localStorage.removeItem(DEMO_KEY);
+  localStorage.removeItem(DEMO_LICENSE_KEY);
+  localStorage.removeItem(DEMO_LICENSE_CACHE_KEY);
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -543,8 +667,102 @@ function exportSvg(): void {
 }
 
 function exportSummary(): void {
-  const text = [`${layout.name} — parts summary`, '', `Voltage: ${layout.voltage} V`, `Pixels: ${layout.segments.reduce((n, s) => n + s.pixels, 0)}`, `Estimated current: ${totalCurrent(layout).toFixed(1)} A`, `Estimated power: ${totalWatts(layout).toFixed(0)} W`, '', 'Segments:', ...layout.segments.map((s) => `- ${s.name}: ${s.pixels} pixels, ${segmentCurrent(s, layout).toFixed(1)} A, power ${s.injection}`), '', 'Supplies:', ...layout.supplies.map((s) => `- ${s.name}: ${s.volts} V, ${s.amps} A stated`), '', 'Planning estimate only. Confirm wire size, fusing, voltage drop, and mains work.'].join('\n');
+  const powerPointLabel = (value: Segment['injection']) => value === 'both' ? 'power points at both ends' : value === 'start' ? 'power point at data start' : 'no power point marked';
+  const text = [`${layout.name} — parts summary`, '', `Voltage: ${layout.voltage} V`, `Pixels: ${layout.segments.reduce((n, s) => n + s.pixels, 0)}`, `Estimated current: ${totalCurrent(layout).toFixed(1)} A`, `Estimated power: ${totalWatts(layout).toFixed(0)} W`, '', 'Segments:', ...layout.segments.map((s) => `- ${s.name}: ${s.pixels} pixels, ${segmentCurrent(s, layout).toFixed(1)} A, ${powerPointLabel(s.injection)}`), '', 'Supplies:', ...layout.supplies.map((s) => `- ${s.name}: ${s.volts} V, ${s.amps} A stated`), '', 'Planning estimate only. Confirm wire size, fusing, voltage drop, and mains work.'].join('\n');
   download(`${slug(layout.name)}-parts.txt`, text, 'text/plain');
+}
+
+function exportPlan(): void {
+  const project = JSON.stringify({ format: 'led-layout-checker', version: 1, layout }, null, 2);
+  download(`${slug(layout.name)}.led-plan.json`, project, 'application/json');
+  toast('Editable plan JSON downloaded.');
+}
+
+async function prepareImport(input: HTMLInputElement): Promise<void> {
+  const message = document.querySelector<HTMLElement>('#import-message');
+  const trigger = document.querySelector<HTMLButtonElement>('#import-trigger');
+  const file = input.files?.[0];
+  if (!file || !message || !trigger) return;
+  try {
+    if (file.size > 1_000_000) throw new Error('Choose a plan JSON file smaller than 1 MB.');
+    const parsed = JSON.parse(await file.text()) as unknown;
+    pendingImport = parseProject(parsed);
+    const preview = document.querySelector<HTMLElement>('#import-preview');
+    if (preview) preview.textContent = `${pendingImport.name}: ${countLabel(pendingImport.segments.length, 'segment')}, ${countLabel(pendingImport.controllers.length, 'controller')}, and ${countLabel(pendingImport.supplies.length, 'supply')}.`;
+    message.textContent = '';
+    const dialog = document.querySelector<HTMLDialogElement>('#import-dialog');
+    dialog?.showModal();
+    document.querySelector<HTMLButtonElement>('#confirm-import')?.focus();
+  } catch (error) {
+    pendingImport = null;
+    message.textContent = error instanceof Error ? error.message : 'This file is not a valid LED Layout Checker plan.';
+    trigger.focus();
+  } finally {
+    input.value = '';
+  }
+}
+
+function parseProject(value: unknown): Layout {
+  if (!isRecord(value) || value.format !== 'led-layout-checker' || value.version !== 1 || !isRecord(value.layout)) {
+    throw new Error('This file is not a version 1 LED Layout Checker plan.');
+  }
+  const candidate = value.layout;
+  const point = (item: unknown): item is Point => isRecord(item) && finiteRange(item.x, 0, 100) && finiteRange(item.y, 0, 100);
+  const controllersOk = Array.isArray(candidate.controllers) && candidate.controllers.every((item) => isRecord(item)
+    && nonEmpty(item.id) && nonEmpty(item.name) && point(item.point));
+  const suppliesOk = Array.isArray(candidate.supplies) && candidate.supplies.every((item) => isRecord(item)
+    && nonEmpty(item.id) && nonEmpty(item.name) && point(item.point) && (item.volts === 5 || item.volts === 12) && finiteRange(item.amps, 0.1, 200));
+  const segmentsOk = Array.isArray(candidate.segments) && candidate.segments.every((item) => isRecord(item)
+    && nonEmpty(item.id) && nonEmpty(item.name) && typeof item.color === 'string'
+    && (item.direction === 'forward' || item.direction === 'reverse')
+    && (item.injection === 'none' || item.injection === 'start' || item.injection === 'both')
+    && typeof item.controllerId === 'string' && finiteRange(item.pixels, 1, 5000)
+    && Array.isArray(item.points) && item.points.length >= 2 && item.points.every(point));
+  if (!nonEmpty(candidate.name) || (candidate.voltage !== 5 && candidate.voltage !== 12)
+    || !finiteRange(candidate.milliAmpsPerPixel, 1, 100) || !finiteRange(candidate.brightness, 1, 100)
+    || typeof candidate.updatedAt !== 'string' || !segmentsOk || !controllersOk || !suppliesOk) {
+    throw new Error('This plan file has missing or invalid layout data. Choose an exported plan JSON file.');
+  }
+  return cloneLayout(candidate as unknown as Layout);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function nonEmpty(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function countLabel(count: number, noun: string): string {
+  const plural = noun === 'supply' ? 'supplies' : `${noun}s`;
+  return `${count} ${count === 1 ? noun : plural}`;
+}
+
+function finiteRange(value: unknown, min: number, max: number): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
+}
+
+function closeImportDialog(): void {
+  pendingImport = null;
+  document.querySelector<HTMLDialogElement>('#import-dialog')?.close();
+  document.querySelector<HTMLButtonElement>('#import-trigger')?.focus();
+}
+
+function confirmImport(): void {
+  if (!pendingImport) return;
+  snapshot();
+  layout = cloneLayout(pendingImport);
+  pendingImport = null;
+  activeSegmentId = layout.segments[0]?.id ?? '';
+  selectedItem = activeSegmentId ? `segment:${activeSegmentId}` : layout.controllers[0] ? `controller:${layout.controllers[0].id}` : '';
+  saveLayout('Imported plan saved');
+  document.querySelector<HTMLDialogElement>('#import-dialog')?.close();
+  renderRoute(false);
+  requestAnimationFrame(() => {
+    document.querySelector<HTMLButtonElement>('#import-trigger')?.focus();
+    toast('Imported plan replaced the current plan.');
+  });
 }
 
 function download(filename: string, content: string, type: string): void {
@@ -576,8 +794,9 @@ async function restoreLicense(): Promise<void> {
     const response = await fetch(`${BILLING_BASE}/verify?license=${encodeURIComponent(token)}`);
     const result = await response.json() as { valid: boolean; reason?: string };
     if (!result.valid) { message.textContent = 'That license is not active. Check the token and try again.'; return; }
-    localStorage.setItem(LICENSE_KEY, token);
-    localStorage.setItem(LICENSE_CACHE_KEY, JSON.stringify({ token, valid: true, checkedAt: Date.now() }));
+    const [tokenKey, cacheKey] = licenseKeys();
+    localStorage.setItem(tokenKey, token);
+    localStorage.setItem(cacheKey, JSON.stringify({ token, valid: true, checkedAt: Date.now() }));
     paid = true; licenseNotice = ''; renderRoute(false); toast('Studio license verified.');
   } catch {
     message.textContent = 'The license service could not be reached. Check your connection and try again.';
@@ -587,14 +806,15 @@ async function restoreLicense(): Promise<void> {
 async function checkStoredLicense(): Promise<void> {
   const params = new URLSearchParams(location.search);
   const returned = params.get('license');
+  const [tokenKey, cacheKey] = licenseKeys();
   if (returned) {
-    localStorage.setItem(LICENSE_KEY, returned);
+    localStorage.setItem(tokenKey, returned);
     params.delete('license');
-    history.replaceState({}, '', `${location.pathname}${params.size ? `?${params}` : ''}`);
+    history.replaceState({}, '', `${location.pathname}${params.size ? `?${params}` : ''}${location.hash}`);
   }
-  const token = returned || localStorage.getItem(LICENSE_KEY);
+  const token = returned || localStorage.getItem(tokenKey);
   if (!token) return;
-  const cached = safeCache(localStorage.getItem(LICENSE_CACHE_KEY));
+  const cached = safeCache(localStorage.getItem(cacheKey));
   const matchingCache = cached?.token === token ? cached : null;
   if (matchingCache) {
     paid = matchingCache.valid;
@@ -607,7 +827,7 @@ async function checkStoredLicense(): Promise<void> {
     const result = await response.json() as { valid: boolean };
     paid = result.valid;
     licenseNotice = result.valid ? '' : 'This license is no longer active.';
-    localStorage.setItem(LICENSE_CACHE_KEY, JSON.stringify({ token, valid: result.valid, checkedAt: Date.now() }));
+    localStorage.setItem(cacheKey, JSON.stringify({ token, valid: result.valid, checkedAt: Date.now() }));
     if (isPlannerPath()) renderRoute(false);
   } catch { /* The free planner and cached verdict keep working offline. */ }
 }
@@ -622,7 +842,7 @@ function safeCache(raw: string | null): { token: string; valid: boolean; checked
   } catch { return null; }
 }
 
-window.addEventListener('popstate', () => renderRoute());
+window.addEventListener('popstate', () => { renderRoute(); void checkStoredLicense(); });
 renderRoute(Boolean(location.hash));
 void checkStoredLicense();
 

@@ -1,65 +1,107 @@
 [
   {
     "id": "sample-preflight",
-    "claim": "The sample plan estimates 11.5 A and flags two power assumptions.",
-    "where": "demo preflight panel",
+    "claim": "The sample has 480 pixels, three segments, one controller, two supplies, an 11.5 A estimate, and two warnings.",
+    "where": "landing sample action, demo, README",
     "test": "npm run test:e2e -- --grep @claim:sample-preflight",
-    "sandbox": "fresh browser context at /demo"
+    "sandbox": "fresh browser context at /?demo=1; assert rendered totals, source counts, segment count, and named warnings"
   },
   {
     "id": "preflight-rules",
-    "claim": "Flags missing controllers, missing power points, long single-ended runs, low supply headroom, and supply-voltage mismatches.",
+    "claim": "Flags missing controllers, missing power points, long strips powered at one end, low supply headroom, and voltage mismatches.",
     "where": "planner checks and README",
     "test": "npm run test:unit -- -t @claim:preflight-rules",
     "sandbox": "sample layout with one controlled change for each documented rule"
   },
   {
+    "id": "segment-authoring",
+    "claim": "Creates and saves multi-point LED segments in data order using pointer or keyboard controls.",
+    "where": "landing How it works and README",
+    "test": "npm run test:e2e -- --grep @claim:segment-authoring",
+    "sandbox": "fresh blank plan; create separate three-point pointer and keyboard segments; reload and inspect stored point order"
+  },
+  {
+    "id": "source-placement",
+    "claim": "Places, names, saves, and removes controllers, supplies, and segment power points.",
+    "where": "landing How it works and README",
+    "test": "npm run test:e2e -- --grep @claim:source-placement",
+    "sandbox": "fresh blank plan; place and name sources, mark power points, reload, remove each item, and inspect the result"
+  },
+  {
+    "id": "current-estimates",
+    "claim": "Recalculates segment and total current from pixel count, current per pixel, and brightness.",
+    "where": "landing limits, planner, README",
+    "test": "npm run test:e2e -- --grep @claim:current-estimates",
+    "sandbox": "fresh demo; change each stated input and assert rendered totals against the documented formula"
+  },
+  {
+    "id": "live-checks",
+    "claim": "Layout checks update as the plan changes.",
+    "where": "landing preview",
+    "test": "npm run test:e2e -- --grep @claim:live-checks",
+    "sandbox": "fresh demo; resolve one power warning and observe the warning count change without reload"
+  },
+  {
     "id": "svg-export",
     "claim": "The free planner exports a labeled SVG with the plan and current estimate.",
-    "where": "landing facts and planner toolbar",
+    "where": "landing facts, planner toolbar, README",
     "test": "npm run test:e2e -- --grep @claim:svg-export",
-    "sandbox": "demo layout; inspect downloaded SVG"
+    "sandbox": "fresh demo; inspect the downloaded SVG"
+  },
+  {
+    "id": "plan-json-roundtrip",
+    "claim": "Exports and imports an editable version 1 plan JSON without losing layout data.",
+    "where": "planner toolbar and README",
+    "test": "npm run test:e2e -- --grep @claim:plan-json-roundtrip",
+    "sandbox": "fresh demo; export JSON, change the plan, import with replacement preview, compare layout fields, then undo"
+  },
+  {
+    "id": "plan-json-rejection",
+    "claim": "Rejects malformed plan JSON without replacing the current plan.",
+    "where": "planner import error",
+    "test": "npm run test:e2e -- --grep @claim:plan-json-rejection",
+    "sandbox": "fresh demo; import malformed JSON and assert announced recovery, focus, and unchanged plan"
   },
   {
     "id": "local-only",
-    "claim": "Plans stay in this browser.",
+    "claim": "Plans stay in this browser and normal planning sends no plan data to another origin.",
     "where": "landing facts, privacy page, README",
     "test": "npm run test:e2e -- --grep @claim:local-only",
-    "sandbox": "record all demo network requests while editing and exporting"
+    "sandbox": "record all demo requests while editing and exporting; assert only same-origin traffic"
   },
   {
     "id": "demo-sandbox",
-    "claim": "Demo changes never overwrite a real plan.",
-    "where": "demo banner and README",
+    "claim": "Demo plans and licenses never read or change real plan and license storage.",
+    "where": "demo banner, privacy page, README",
     "test": "npm run test:e2e -- --grep @claim:demo-sandbox",
-    "sandbox": "store a real plan, edit/reset demo, then return to real plan"
+    "sandbox": "seed exact real plan/license sentinels; exercise /?demo=1 return, pasted license, edit, reset, and exit; assert sentinels unchanged and demo keys cleared"
   },
   {
     "id": "offline-reload",
     "claim": "Works offline after the first visit.",
     "where": "landing facts and README",
     "test": "npm run test:e2e -- --grep @claim:offline-reload",
-    "sandbox": "fresh browser context; install service worker, go offline, reload /demo"
+    "sandbox": "fresh browser context; install the service worker, go offline, and reload /demo"
   },
   {
     "id": "studio-license",
     "claim": "A valid Studio license exports a parts summary and enables multiple-controller planning.",
-    "where": "pricing and Studio panel",
+    "where": "pricing, Studio panel, README",
     "test": "npm run test:e2e -- --grep @claim:studio-license",
-    "sandbox": "demo layout with a recorded valid verification response"
+    "sandbox": "isolated demo with a recorded valid verification response"
   },
   {
     "id": "daily-license-check",
-    "claim": "A stored license is checked at most once per day.",
-    "where": "README and privacy notes",
+    "claim": "A stored real license is checked at most once per day.",
+    "where": "privacy page and README",
     "test": "npm run test:e2e -- --grep @claim:daily-license-check",
-    "sandbox": "stored license with a stale token-bound verdict; recorded valid verification response; two reloads"
+    "sandbox": "real planner with a stale token-bound verdict and recorded valid response; reload twice"
   },
   {
     "id": "studio-checkout",
-    "claim": "Studio is a $12 one-time purchase through the hosted Sociobot checkout.",
-    "where": "landing, Studio panel, terms, and README",
+    "claim": "Studio is a $12 one-time purchase through Sociobot, with Dodo as merchant of record for payment and refunds.",
+    "where": "landing, Studio panel, terms, README",
     "test": "npm run test:e2e -- --grep @claim:studio-checkout",
-    "sandbox": "demo layout; recorded hosted-checkout redirect; assert price and merchant disclosure"
+    "sandbox": "isolated demo with a recorded hosted-checkout redirect; assert price and exact merchant disclosure"
   }
 ]

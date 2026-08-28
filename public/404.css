@@ -1,5 +1,6 @@
 :root { color-scheme: dark; font-family: Inter, Aptos, "Segoe UI", sans-serif; color: #f5f1df; background: #07110f; }
 * { box-sizing: border-box; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 body { min-width: 320px; min-height: 100vh; margin: 0; overflow-wrap: anywhere; background-color: #07110f; background-image: linear-gradient(rgba(138,245,198,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(138,245,198,.045) 1px,transparent 1px); background-size: 32px 32px; }
 header, footer { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 12px clamp(16px,4vw,64px); border-bottom: 1px solid #29423a; }
 header nav, footer nav { display: flex; gap: 16px; }
@@ -19,4 +20,4 @@ a:focus-visible { outline: 3px solid #ffd166; outline-offset: 4px; }
 footer { flex-wrap: wrap; border-top: 1px solid #29423a; border-bottom: 0; color: #b9c9c0; }
 footer p { margin: 0; }
 footer a, header a { margin-top: 0; padding: 0; background: transparent; }
-@media (max-width: 520px) { header, footer { align-items: flex-start; flex-direction: column; gap: 4px; } header nav { width: 100%; justify-content: space-between; } }
+@media (max-width: 700px) { header, footer { align-items: flex-start; flex-direction: column; gap: 4px; } header nav { width: 100%; justify-content: space-between; } footer nav { flex-wrap: wrap; } }

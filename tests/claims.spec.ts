@@ -3,11 +3,100 @@ import AxeBuilder from '@axe-core/playwright';
 import { existsSync, readFileSync } from 'node:fs';
 
 test('@claim:sample-preflight calculates current and flags power assumptions', async ({ page }) => {
-  await page.goto('/demo');
+  await page.goto('/?demo=1');
   await expect(page.getByRole('heading', { name: /warning/ })).toContainText('2 warnings');
+  await expect(page.getByText('480', { exact: true })).toBeVisible();
   await expect(page.getByText('11.5 A', { exact: true })).toBeVisible();
   await expect(page.getByText('Ground run has no power point')).toBeVisible();
-  await expect(page.getByText('Arch right may need end injection')).toBeVisible();
+  await expect(page.getByText('Arch right may need a far-end power point')).toBeVisible();
+  await expect(page.locator('#active-segment option')).toHaveCount(3);
+  await expect(page.locator('[data-controller-name]')).toHaveCount(1);
+  await expect(page.locator('[data-supply-volts]')).toHaveCount(2);
+});
+
+test('@claim:segment-authoring creates and saves multi-point segments by pointer and keyboard', async ({ page }) => {
+  await page.goto('/planner');
+  await page.getByRole('button', { name: /Segment/ }).click();
+  const canvas = page.locator('#plan-canvas');
+  for (const [x, y] of [[.2, .2], [.5, .35], [.8, .65]]) {
+    const box = (await canvas.boundingBox())!;
+    await canvas.click({ position: { x: box.width * x, y: box.height * y } });
+  }
+  await page.getByRole('button', { name: 'Finish segment' }).click();
+  await page.getByLabel('Name', { exact: true }).fill('Pointer route');
+  await page.getByLabel('Name', { exact: true }).press('Tab');
+
+  await page.getByRole('button', { name: /Segment/ }).click();
+  for (const [x, y] of [[10, 80], [45, 60], [90, 20]]) {
+    await page.getByLabel('X', { exact: true }).fill(String(x));
+    await page.getByLabel('Y', { exact: true }).fill(String(y));
+    await page.getByRole('button', { name: 'Place at coordinates' }).click();
+  }
+  await page.getByRole('button', { name: 'Finish segment' }).click();
+  await page.getByLabel('Name', { exact: true }).fill('Keyboard route');
+  await page.getByLabel('Name', { exact: true }).press('Tab');
+  await page.reload();
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('led-layout-checker:layout:v1')!));
+  expect(stored.segments).toHaveLength(2);
+  expect(stored.segments.map((segment: { name: string }) => segment.name)).toEqual(['Pointer route', 'Keyboard route']);
+  expect(stored.segments.every((segment: { points: unknown[] }) => segment.points.length === 3)).toBe(true);
+  expect(stored.segments[1].points).toEqual([{ x: 10, y: 80 }, { x: 45, y: 60 }, { x: 90, y: 20 }]);
+});
+
+test('@claim:source-placement places, names, saves, and removes sources and power points', async ({ page }) => {
+  await page.goto('/planner');
+  await page.getByRole('button', { name: 'Remove Controller 1' }).click();
+  await page.getByRole('button', { name: /^Add controller/ }).click();
+  await page.getByLabel('X', { exact: true }).fill('25');
+  await page.getByLabel('Y', { exact: true }).fill('40');
+  await page.getByRole('button', { name: 'Place at coordinates' }).click();
+  await page.locator('[data-controller-name]').fill('Show controller');
+  await page.locator('[data-controller-name]').press('Tab');
+  await page.getByRole('button', { name: /Segment/ }).click();
+  for (const [x, y] of [[15, 20], [75, 70]]) {
+    await page.getByLabel('X', { exact: true }).fill(String(x));
+    await page.getByLabel('Y', { exact: true }).fill(String(y));
+    await page.getByRole('button', { name: 'Place at coordinates' }).click();
+  }
+  await page.getByRole('button', { name: 'Finish segment' }).click();
+  await page.getByLabel('Power points').selectOption('both');
+  await page.getByRole('button', { name: /Supply/ }).click();
+  await page.getByLabel('X', { exact: true }).fill('55');
+  await page.getByLabel('Y', { exact: true }).fill('85');
+  await page.getByRole('button', { name: 'Place at coordinates' }).click();
+  await page.reload();
+  await expect(page.locator('[data-controller-name]')).toHaveValue('Show controller');
+  await expect(page.locator('[data-supply-volts]')).toHaveCount(1);
+  await expect(page.getByLabel('Power points')).toHaveValue('both');
+  await page.getByLabel('Power points').selectOption('none');
+  await page.getByRole('button', { name: 'Remove Show controller' }).click();
+  await page.getByRole('button', { name: 'Remove Supply 1' }).click();
+  await expect(page.locator('[data-controller-name]')).toHaveCount(0);
+  await expect(page.locator('[data-supply-volts]')).toHaveCount(0);
+  await expect(page.getByLabel('Power points')).toHaveValue('none');
+});
+
+test('@claim:current-estimates recalculates from pixels, current, and brightness', async ({ page }) => {
+  await page.goto('/demo');
+  await expect(page.getByText('11.5 A', { exact: true })).toBeVisible();
+  await page.getByLabel('Pixel count').fill('200');
+  await page.getByLabel('Pixel count').press('Tab');
+  await expect(page.getByText('12.0 A', { exact: true })).toBeVisible();
+  await page.getByLabel('Max current per pixel').fill('50');
+  await page.getByLabel('Max current per pixel').press('Tab');
+  await expect(page.getByText('10.0 A', { exact: true })).toBeVisible();
+  await page.getByLabel('Planned brightness').fill('50');
+  await page.getByLabel('Planned brightness').press('Tab');
+  await expect(page.getByText('12.5 A', { exact: true })).toBeVisible();
+});
+
+test('@claim:live-checks updates warnings without a reload', async ({ page }) => {
+  await page.goto('/demo');
+  await expect(page.getByRole('heading', { name: '2 warnings' })).toBeVisible();
+  await page.locator('#active-segment').selectOption({ label: 'Arch right' });
+  await page.getByLabel('Power points').selectOption('both');
+  await expect(page.getByRole('heading', { name: '1 warning' })).toBeVisible();
+  await expect(page.getByText('Arch right has power points marked')).toBeVisible();
 });
 
 test('@claim:svg-export downloads a labeled SVG', async ({ page }) => {
@@ -24,6 +113,44 @@ test('@claim:svg-export downloads a labeled SVG', async ({ page }) => {
   expect(content).toContain('Not electrical advice');
 });
 
+test('@claim:plan-json-roundtrip exports and restores editable plan data', async ({ page }) => {
+  await page.goto('/demo');
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export plan JSON' }).click();
+  const exported = await downloadPromise;
+  expect(exported.suggestedFilename()).toBe('garden-arch-480-pixels.led-plan.json');
+  const filePath = await exported.path();
+  expect(filePath).toBeTruthy();
+  const original = JSON.parse(readFileSync(filePath!, 'utf8'));
+  expect(original).toMatchObject({ format: 'led-layout-checker', version: 1 });
+
+  await page.getByLabel('Plan name').fill('Temporary demo change');
+  await page.getByLabel('Plan name').press('Tab');
+  await page.locator('#import-plan').setInputFiles(filePath!);
+  await expect(page.getByRole('dialog', { name: 'Replace this plan?' })).toContainText('Garden arch — 480 pixels: 3 segments, 1 controller, and 2 supplies.');
+  await page.getByRole('button', { name: 'Replace with imported plan' }).click();
+  await expect(page.getByLabel('Plan name')).toHaveValue('Garden arch — 480 pixels');
+  const restored = await page.evaluate(() => JSON.parse(localStorage.getItem('demo:led-layout-checker:layout:v1')!));
+  expect({ ...restored, updatedAt: original.layout.updatedAt }).toEqual(original.layout);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.getByLabel('Plan name')).toHaveValue('Temporary demo change');
+});
+
+test('@claim:plan-json-rejection rejects malformed project files without replacement', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByLabel('Plan name').fill('Keep this plan');
+  await page.getByLabel('Plan name').press('Tab');
+  await page.locator('#import-plan').setInputFiles({
+    name: 'broken.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({ format: 'led-layout-checker', version: 1, layout: { name: 'Broken' } })),
+  });
+  await expect(page.locator('#import-message')).toHaveText('This plan file has missing or invalid layout data. Choose an exported plan JSON file.');
+  await expect(page.getByRole('button', { name: 'Import plan JSON' })).toBeFocused();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.getByLabel('Plan name')).toHaveValue('Keep this plan');
+});
+
 test('@claim:local-only keeps plan traffic on the same origin', async ({ page }) => {
   const outsideRequests: string[] = [];
   page.on('request', (request) => {
@@ -36,19 +163,44 @@ test('@claim:local-only keeps plan traffic on the same origin', async ({ page })
   expect(outsideRequests).toEqual([]);
 });
 
-test('@claim:demo-sandbox keeps sample data separate and resets it', async ({ page }) => {
+test('@claim:demo-sandbox isolates plans and licenses, resets, and exits cleanly', async ({ page }) => {
   await page.goto('/planner');
   await page.getByLabel('Plan name').fill('My real plan');
   await page.getByLabel('Plan name').press('Tab');
-  await page.goto('/demo');
+  const realPlan = await page.evaluate(() => localStorage.getItem('led-layout-checker:layout:v1'));
+  const realLicense = 'REAL-LICENSE-SENTINEL';
+  const realCache = JSON.stringify({ token: realLicense, valid: true, checkedAt: Date.now() });
+  await page.evaluate(({ realLicense, realCache }) => {
+    localStorage.setItem('sb_license:led-layout-checker', realLicense);
+    localStorage.setItem('sb_license_check:led-layout-checker', realCache);
+  }, { realLicense, realCache });
+  await page.route(/https:\/\/api\.sociobot\.in\/.*verify\?license=(demo-return|demo-pasted)/, (route) => route.fulfill({ json: { valid: true, reason: 'ok' } }));
+
+  await page.goto('/?demo=1&license=demo-return');
   await expect(page.getByLabel('Plan name')).toHaveValue('Garden arch — 480 pixels');
+  await expect(page.getByText('Demo — sample data, nothing is saved to your plans.')).toBeVisible();
+  await expect(page.getByText('Studio active')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('demo:sb_license:led-layout-checker'))).toBe('demo-return');
+  expect(await page.evaluate(() => localStorage.getItem('sb_license:led-layout-checker'))).toBe(realLicense);
+  expect(await page.evaluate(() => localStorage.getItem('sb_license_check:led-layout-checker'))).toBe(realCache);
+
+  await page.getByRole('button', { name: 'Reset demo' }).click();
+  expect(await page.evaluate(() => localStorage.getItem('demo:sb_license:led-layout-checker'))).toBeNull();
+  await page.getByText('Have a license?').click();
+  await page.getByLabel('License token').fill('demo-pasted');
+  await page.getByRole('button', { name: 'Verify license' }).click();
+  await expect(page.getByText('Studio active')).toBeVisible();
   await page.getByLabel('Plan name').fill('Changed demo');
   await page.getByLabel('Plan name').press('Tab');
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await expect(page.getByLabel('Plan name')).toHaveValue('Garden arch — 480 pixels');
   await page.getByRole('button', { name: 'Start for real' }).click();
   await expect(page.getByLabel('Plan name')).toHaveValue('My real plan');
-  expect(await page.evaluate(() => localStorage.getItem('demo:led-layout-checker:layout:v1'))).toBeNull();
+  const storage = await page.evaluate(() => Object.fromEntries(Object.keys(localStorage).map((key) => [key, localStorage.getItem(key)])));
+  expect(storage['led-layout-checker:layout:v1']).toBe(realPlan);
+  expect(storage['sb_license:led-layout-checker']).toBe(realLicense);
+  expect(storage['sb_license_check:led-layout-checker']).toBe(realCache);
+  expect(Object.keys(storage).filter((key) => key.startsWith('demo:'))).toEqual([]);
 });
 
 test('@claim:offline-reload works offline after the first visit', async ({ page, context }) => {
@@ -104,7 +256,7 @@ test('overflowing preflight results are keyboard scrollable and pass axe', async
   }
   await page.getByRole('button', { name: 'Finish segment' }).click();
 
-  const results = page.getByRole('list', { name: 'Preflight results' });
+  const results = page.getByRole('list', { name: 'Layout check results' });
   const dimensions = await results.evaluate((element) => ({
     clientHeight: element.clientHeight,
     scrollHeight: element.scrollHeight,
@@ -161,6 +313,19 @@ test('canvas exposes routed geometry without application semantics', async ({ pa
   await expect(page.locator('[role="application"]')).toHaveCount(0);
   await expect(page.locator('#plan-description')).toContainText('Arch left: 180 pixels');
   await expect(page.locator('#plan-description')).toContainText('coordinates 14, 52 to 23, 27');
+});
+
+test('Select chooses paths and sources by pointer and keyboard', async ({ page }) => {
+  await page.goto('/demo');
+  await page.locator('[data-tool="select"]').click();
+  const canvas = page.locator('#plan-canvas');
+  const box = (await canvas.boundingBox())!;
+  await canvas.click({ position: { x: box.width * .79, y: box.height * .29 } });
+  await expect(page.locator('#active-segment')).toHaveValue('seg-arch-right');
+  await expect(page.locator('[data-select-item="segment:seg-arch-right"]')).toHaveClass(/selected/);
+  await page.getByLabel('Select plan item').selectOption('controller:ctrl-1');
+  await expect(page.locator('[data-controller-name="ctrl-1"]')).toBeFocused();
+  await expect(page.locator('[data-select-item="controller:ctrl-1"]')).toHaveClass(/selected/);
 });
 
 test('planner works at 390px and has a keyboard placement path', async ({ page }) => {
@@ -229,9 +394,9 @@ test('saved items can be corrected, removed, and restored', async ({ page }) => 
   await page.getByLabel('Supply A voltage').selectOption('12');
   await expect(page.getByText('Supply A voltage does not match')).toBeVisible();
   await page.getByRole('button', { name: 'Remove Arch left' }).click();
-  await expect(page.getByText('Arch left has a power assumption')).toHaveCount(0);
+  await expect(page.getByText('Arch left has power points marked')).toHaveCount(0);
   await page.reload();
-  await expect(page.getByText('Arch left has a power assumption')).toHaveCount(0);
+  await expect(page.getByText('Arch left has power points marked')).toHaveCount(0);
   await page.getByRole('button', { name: 'Remove Supply A' }).click();
   await expect(page.getByLabel('Supply A voltage')).toHaveCount(0);
   await page.getByRole('button', { name: 'Undo' }).click();
@@ -299,7 +464,7 @@ test('@claim:studio-checkout opens the $12 one-time hosted checkout', async ({ p
   });
   await page.goto('/demo');
   await expect(page.getByText('$12 once.')).toBeVisible();
-  await expect(page.getByText(/merchant of record/)).toBeVisible();
+  await expect(page.getByText('Checkout runs through Sociobot. Dodo is the merchant of record and handles payment and refunds.')).toBeVisible();
   await page.getByRole('link', { name: 'Buy Studio for $12' }).click();
   await expect(page).toHaveURL('/checkout-fixture');
   expect(checkoutRequests).toBe(1);
@@ -314,6 +479,50 @@ test('static host config returns a real 404 and PWA metadata has install icons',
   expect(manifest.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual(expect.arrayContaining(['192x192', '512x512']));
   expect(existsSync('public/icon-192.png')).toBe(true);
   expect(existsSync('public/icon-512.png')).toBe(true);
+  const notFound = readFileSync('public/404.html', 'utf8');
+  for (const required of ['name="description"', 'rel="canonical"', 'property="og:title"', 'name="twitter:title"', 'rel="apple-touch-icon"', 'Built by Param Factory', 'v1.1.0', 'Hero imagery was generated']) {
+    expect(notFound).toContain(required);
+  }
+});
+
+test('installed service worker returns the designed 404 with status 404', async ({ page }) => {
+  await page.goto('/demo');
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) await new Promise<void>((resolve) => navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true }));
+  });
+  const response = await page.goto('/definitely-missing-after-worker');
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole('heading', { name: 'This path does not connect' })).toBeVisible();
+});
+
+test('each route updates title, description, canonical, and social metadata', async ({ page }) => {
+  const routes = [
+    ['/', 'LED Layout Checker — plan strips before soldering', '/'],
+    ['/planner', 'Planner — LED Layout Checker', '/planner'],
+    ['/?demo=1', 'Demo — LED Layout Checker', '/demo'],
+    ['/privacy', 'Privacy — LED Layout Checker', '/privacy'],
+    ['/terms', 'Terms — LED Layout Checker', '/terms'],
+    ['/missing-metadata', 'Page not found — LED Layout Checker', '/404.html'],
+  ];
+  for (const [path, title, canonicalPath] of routes) {
+    await page.goto(path);
+    await expect(page).toHaveTitle(title);
+    const values = await page.evaluate(() => ({
+      description: document.querySelector<HTMLMetaElement>('meta[name="description"]')?.content,
+      canonical: document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href,
+      ogTitle: document.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.content,
+      ogDescription: document.querySelector<HTMLMetaElement>('meta[property="og:description"]')?.content,
+      twitterTitle: document.querySelector<HTMLMetaElement>('meta[name="twitter:title"]')?.content,
+      twitterDescription: document.querySelector<HTMLMetaElement>('meta[name="twitter:description"]')?.content,
+    }));
+    expect(values.description?.length).toBeGreaterThan(20);
+    expect(values.canonical).toBe(`https://led-layout-checker.sociobot.in${canonicalPath}`);
+    expect(values.ogTitle).toBe(title);
+    expect(values.twitterTitle).toBe(title);
+    expect(values.ogDescription).toBe(values.description);
+    expect(values.twitterDescription).toBe(values.description);
+  }
 });
 
 test('offline shell keeps browser security policies and avoids full-size hero precache', async ({ page, context }) => {
@@ -323,7 +532,7 @@ test('offline shell keeps browser security policies and avoids full-size hero pr
     if (!navigator.serviceWorker.controller) await new Promise<void>((resolve) => navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true }));
   });
   const cachedUrls = await page.evaluate(async () => {
-    const cache = await caches.open('led-layout-checker-v8');
+    const cache = await caches.open('led-layout-checker-v9');
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cachedUrls).toContain('/assets/hero-routing-600.webp');
@@ -357,6 +566,6 @@ test('all routes load without console errors', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
-  for (const path of ['/', '/planner', '/demo', '/privacy', '/terms', '/missing']) await page.goto(path);
+  for (const path of ['/', '/planner', '/demo', '/privacy', '/terms']) await page.goto(path);
   expect(errors).toEqual([]);
 });

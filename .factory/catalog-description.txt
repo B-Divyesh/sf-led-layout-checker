@@ -1,0 +1,1 @@
+Plan LED strips, check current and power points, and export a labeled layout before soldering.
