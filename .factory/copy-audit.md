@@ -1,6 +1,6 @@
-# Copy audit — polish round 1
+# Copy audit — polish round 2
 
-Counted 2026-08-28. Contractions, hyphenated terms, prices, and inline code each count as one word. No landing sentence exceeds 22 words. No banned marketing word appears.
+Counted 2026-08-28. Contractions, hyphenated terms, prices, and inline code each count as one word. No public sentence exceeds 22 words. No banned marketing word appears.
 
 | Landing copy | Words | Claim or purpose |
 | --- | ---: | --- |
@@ -42,6 +42,15 @@ Counted 2026-08-28. Contractions, hyphenated terms, prices, and inline code each
 | Restore a license | 3 | Action |
 | Plan LED paths before soldering. | 5 | Footer summary |
 | Hero imagery was generated for this product. | 7 | Provenance |
+
+## README correction
+
+| README copy | Words | Result |
+| --- | ---: | --- |
+| `npm test` runs calculation, claim, accessibility, offline-reload, and keyboard tests. | 9 | pass |
+| It also makes a production build. | 6 | pass |
+| The keyboard test uses a 390 px phone width. | 9 | pass |
+| `npm run build` writes the static site to `dist/` with `index.html` at its root. | 14 | pass |
 
 ## Terminology
 

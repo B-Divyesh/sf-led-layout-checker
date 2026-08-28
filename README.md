@@ -51,7 +51,9 @@ npm test
 npm run build
 ```
 
-`npm test` runs calculation tests, a production build, claim tests, accessibility checks, an offline reload, and a keyboard-only workflow at a 390 px phone width. `npm run build` writes the static site to `dist/` with `index.html` at its root.
+`npm test` runs calculation, claim, accessibility, offline-reload, and keyboard tests. It also makes a production build. The keyboard test uses a 390 px phone width.
+
+`npm run build` writes the static site to `dist/` with `index.html` at its root.
 
 Deploy `dist/` to Azure Static Web Apps. `public/staticwebapp.config.json` provides route rewrites, the designed 404 response, cache rules, and security headers.
 
