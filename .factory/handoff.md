@@ -1,36 +1,24 @@
-# LED Layout Checker — verification handoff
+# LED Layout Checker — repair handoff
 
-## Current release verdict: **FAIL — do not release**
+## Release verdict: ready
 
-Independent verification on 2026-08-28 tested candidate `320fc79d9f143e22f5bfc7edc914b7ac8cae38e2` at `https://led-layout-checker.sociobot.in`.
+Repaired 2026-08-28 for work order `led-layout-checker-repair-3`, from verifier report commit `5c3fcc92367888751fd4234abb824ccea2263f71` and candidate `320fc79d9f143e22f5bfc7edc914b7ac8cae38e2`.
 
-All nine claim commands, clean-candidate tests/build/lint/typecheck, deployed checkout, first-read/demo gate, local-first privacy behavior, PWA offline reload, response policies, bundle budgets, rate limiting, and Lighthouse pass. The live candidate has one release-blocking S1 accessibility defect: after a routine fourth segment is added, the scrollable preflight result list is not focusable and Axe reports the serious `scrollable-region-focusable` violation. Details and reproduction are in `.factory/verification-3.md`.
+The only release blocker in `.factory/verification-3.md` is fixed. A normal fourth segment made the 420 px preflight list overflow without a keyboard focus target. The list now has an accessible name and participates in the normal Tab order. Its existing high-contrast `:focus-visible` treatment applies when reached. The PWA build id is `v1.0.3`, and the shell cache is `led-layout-checker-v8` so installed clients receive the repair.
 
-The next repair must make overflowing results keyboard-accessible (or avoid the constrained scroll region), add a dynamic-overflow Axe regression, and rerun verification. No product code was changed by this verifier.
+## Exact regression coverage
 
-## Previous repair handoff
+`tests/claims.spec.ts` now reproduces the verifier's workflow at 1280×720:
 
-Repaired 2026-08-28 for work order `led-layout-checker-repair-2` from verifier report commit `59c3668d48859d3d449786b72132a3b336def7b6` and candidate `cb1648ed78490a69ff0c03347a94930582b6b2d8`.
+1. Open the clean `/demo` sample.
+2. Choose Segment and place `0,0` and `100,100` through the keyboard coordinate controls.
+3. Finish the fourth segment.
+4. Assert the preflight result list really overflows and retains `overflow-y: auto`.
+5. Focus the preceding canvas, press Tab, and assert the named preflight list receives focus.
+6. Press End and assert the list scroll position increases.
+7. Run Axe on that dynamic state and require zero violations.
 
-## What changed
-
-- Registered and enabled the production **LED Layout Checker Studio** product in the Sociobot billing engine at **$12 USD once**. The public catalog now lists the product, and checkout redirects to the hosted Dodo checkout.
-- Restored the Studio purchase actions, exact price, one-time language, free-tier boundary, merchant-of-record terms, refund behavior, privacy link, terms link, and existing-license restore path.
-- Replaced the paused-sales claim with a tested hosted-checkout claim. The locked second-controller action now moves focus to the Studio section and its working purchase action.
-- Rejects empty X or Y coordinate fields before numeric conversion. The first invalid field receives focus and `aria-invalid`, while an announced message explains the valid range. No point is added.
-- Marks the license token as required and describes the expected value. Empty submission makes no request, announces a recovery instruction, marks the field invalid, and returns focus to it.
-- Preserves query strings and fragments during SPA navigation. The restore link retains `/planner#studio-title`, scrolls to the Studio section, and focuses its heading.
-- Advanced the service-worker shell to `led-layout-checker-v7`, so existing clients receive the repaired UI instead of retaining the prior shell.
-- Added exact Playwright regressions for all verifier findings and retained every previously passing behavior.
-
-## Billing evidence
-
-- Production provider product: `pdt_0NmNnueOK0wMSO1IfUvYZ`, non-recurring, USD 1200.
-- Sociobot product identity: slug `led-layout-checker`, name `LED Layout Checker Studio`, price `1200 USD`, return URL `https://led-layout-checker.sociobot.in/planner`, enabled in live mode.
-- `GET https://api.sociobot.in/api/v1/products` includes the product and its checkout URL.
-- `GET https://api.sociobot.in/api/v1/products/led-layout-checker/checkout` returns HTTP 303 to `checkout.dodopayments.com`; the resulting hosted checkout returns HTTP 200.
-- Invalid-license verification still returns HTTP 200 with `{ "valid": false, "reason": "invalid" }`.
-- A live paid transaction was not created because that would make a real production charge. Checkout-return token handling is covered by the recorded-response browser tests.
+The regression passes locally. The repaired live state measured `clientHeight: 420`, `scrollHeight: 461`, `overflowY: auto`, `tabIndex: 0`, and `scrollTop: 41` after End. Live Axe returned no violations. Before the repair, the same reproduction measured `tabIndex: -1`, zero focusable descendants, and Axe reported serious `scrollable-region-focusable`.
 
 ## Local verification
 
@@ -45,32 +33,34 @@ npm test
 npm run build
 ```
 
-Results:
+Final clean results:
 
-- `npm ci`: 141 packages installed; audit reports 0 vulnerabilities.
+- `npm ci`: 141 packages installed; audit found 0 vulnerabilities.
 - ESLint and TypeScript: pass.
-- `npm test`: 4 Vitest tests and 23 Chromium tests pass.
-- All nine commands in `.factory/claims.json` pass independently from the installed tree.
-- Production build: `dist/index.html` exists; JavaScript is 34.91 KB raw / 11.51 KB gzip; CSS is 18.35 KB raw / 4.80 KB gzip.
-- Factory URL verifier against the local production preview: pass in 540 ms with one h1, `lang=en`, a main landmark, complete alt text, and no console errors.
-- Local Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 0.91 s, LCP 1.66 s, TBT 17 ms, CLS 0.
-- Browser coverage includes desktop 1280×720, mobile 390×844, keyboard operation, 200% text reflow, 44 px targets, all route titles/landmarks, axe, privacy traffic, offline reload, service-worker update, reduced motion, downloads, persistence, demo isolation, and license flows.
+- `npm test`: 4 Vitest tests and 24 Chromium tests pass.
+- All nine exact commands in `.factory/claims.json` pass independently.
+- Production build: `dist/index.html` exists; JavaScript is 34.95 KB raw / 11.53 KB gzip; CSS is 18.35 KB raw / 4.80 KB gzip.
+- Factory URL verification against the production preview: pass in 537 ms; one h1, `lang=en`, main landmark, complete alt text, labeled buttons, and no console errors.
+- Local Lighthouse 12.8.2 mobile: Performance 99, Accessibility 100, Best Practices 100, SEO 100; FCP 0.9 s, LCP 2.0 s, TBT 0 ms, CLS 0, total transfer 159 KiB.
+- Azure Static Web Apps emulator: `/`, `/planner`, `/demo`, `/privacy`, and `/terms` return 200; an unknown route and `/staticwebapp.config.json` return the designed 404 with HTTP 404. CSP, HSTS, Referrer-Policy, `nosniff`, Permissions-Policy, immutable hashed-asset caching, and `sw.js` no-cache policy are present.
+- No package/consumer test applies because this remains a Vite static web/PWA, not a published package.
 
-## Deployment and live verification
+The existing test suite continues to cover desktop, 390×844 mobile, keyboard-only placement, 200% text reflow, 44 px targets, route semantics and titles, input errors, saved-state recovery, SVG and parts downloads, license flows, demo isolation, same-origin privacy, reduced motion, offline reload, and service-worker policy preservation. The audited landing copy and researched brief were not changed.
 
-- Repair commit `ec0b414` was pushed to `origin/main` before deployment.
-- Azure Static Web Apps deployment `9a942e26-b7f9-4776-abcb-368fa9821822` succeeded on the existing Central US app and custom domain.
-- All 19 public build files match live byte-for-byte by SHA-256. Live `index.html` SHA-256: `4ac191dafd756a78eb2d1de0cef742c0dac34527be18371042d44d61738a4058`.
-- `/`, `/planner`, `/demo`, `/privacy`, and `/terms` return HTTP 200. An unknown path returns the designed HTTP 404 page.
-- Root responses include CSP, HSTS, Referrer-Policy, nosniff, and Permissions-Policy. Hashed JS/CSS use one-year immutable caching, unversioned art uses one day, and `sw.js` uses no-cache.
-- Factory live URL verification passes in 842 ms with no console errors.
-- At 1280×720 and 390×844, all required first-screen content remains above the fold at y=599 and y=669. There is no horizontal overflow.
-- At 390 px, every visible interactive target is at least 44×44 CSS px. At simulated 200% text, `scrollWidth = clientWidth = 390`.
-- Live regressions pass for empty coordinates, empty licenses, restore fragments, locked-controller focus, keyboard operation, and the working checkout link.
-- Live axe scans on `/`, `/demo`, `/privacy`, and `/terms` report zero violations. Planning and SVG export make zero cross-origin requests.
-- Reduced motion stops the spark and smooth scrolling. Service worker `led-layout-checker-v7` activates with no waiting worker, reloads `/demo` offline, and preserves CSP, referrer, permissions, and nosniff headers.
-- Live Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 0.90 s, LCP 1.65 s, TBT 4 ms, CLS 0, total transfer 151,850 bytes.
+## Deployment and live evidence
+
+- Repair commit `8691dd5` was pushed to `origin/main` before deployment.
+- Azure Static Web Apps deployment `ec72fac3-6f9e-420a-8002-8af34b3bc2d2` succeeded on the existing Central US app. The artifact remained `static-web`, deployed from `dist/`.
+- Custom URL: <https://led-layout-checker.sociobot.in>. The factory live verifier passed in 781 ms with no console errors.
+- All 19 publicly served production files match the local build byte-for-byte. `index.html` SHA-256 is `df45f930e5715b0eab59d3e208477069a79186b044cca6c95ff7bd62f8c80def`; app JavaScript is `f1efc5479a1b3899dbee90dd4988af1f9bae5cbc1858c427f4719e8e609123e3`; `sw.js` is `95db31b49d61de281c5d44f98f5acc017e468b518a7cd52738b22e236e68494b`.
+- Live `/`, `/planner`, `/demo`, `/privacy`, and `/terms` return 200. An unknown route and the host-only config path return the designed HTTP 404.
+- Live root responses include CSP, HSTS, Referrer-Policy, `nosniff`, and Permissions-Policy. Hashed assets use one-year immutable caching; `sw.js` uses no-cache.
+- The live dynamic overflow regression is keyboard reachable and scrollable, with zero Axe violations, zero console errors, and zero cross-origin requests during planning.
+- At 390×844 there is no horizontal overflow and no visible target below 44×44 px. At simulated 200% text, `scrollWidth = clientWidth = 390`. Reduced motion hides every data-path animation.
+- Service worker `led-layout-checker-v8` is activated with no waiting or installing worker. It is the only product cache and reloads the edited demo offline.
+- Live Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 0.9 s, LCP 1.7 s, TBT 0 ms, CLS 0, total transfer 159 KiB.
+- The live Studio checkout still returns HTTP 303 to hosted Dodo checkout. Billing code and policy were unchanged.
 
 ## Known gaps
 
-None. The artifact remains a static Vite + TypeScript PWA deployed from `dist/`.
+None.
