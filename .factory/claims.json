@@ -1,0 +1,44 @@
+[
+  {
+    "id": "sample-preflight",
+    "claim": "The sample plan estimates 11.5 A and flags two power assumptions.",
+    "where": "demo preflight panel",
+    "test": "npm run test:e2e -- --grep @claim:sample-preflight",
+    "sandbox": "fresh browser context at /demo"
+  },
+  {
+    "id": "svg-export",
+    "claim": "Exports a labeled SVG with the plan and current estimate.",
+    "where": "planner toolbar and landing page",
+    "test": "npm run test:e2e -- --grep @claim:svg-export",
+    "sandbox": "demo layout; inspect downloaded SVG"
+  },
+  {
+    "id": "local-only",
+    "claim": "Plans stay in this browser.",
+    "where": "landing facts, privacy page, README",
+    "test": "npm run test:e2e -- --grep @claim:local-only",
+    "sandbox": "record all demo network requests while editing and exporting"
+  },
+  {
+    "id": "demo-sandbox",
+    "claim": "Demo changes never overwrite a real plan.",
+    "where": "demo banner and README",
+    "test": "npm run test:e2e -- --grep @claim:demo-sandbox",
+    "sandbox": "store a real plan, edit/reset demo, then return to real plan"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "Works offline after the first visit.",
+    "where": "landing facts and README",
+    "test": "npm run test:e2e -- --grep @claim:offline-reload",
+    "sandbox": "fresh browser context; install service worker, go offline, reload /demo"
+  },
+  {
+    "id": "studio-license",
+    "claim": "A valid Studio license exports a parts summary and enables multiple-controller planning.",
+    "where": "pricing and Studio panel",
+    "test": "npm run test:e2e -- --grep @claim:studio-license",
+    "sandbox": "demo layout with a recorded valid verification response"
+  }
+]

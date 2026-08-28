@@ -1,0 +1,9 @@
+{
+  "slug": "led-layout-checker",
+  "title": "LED Layout Checker",
+  "summary": "Plan LED strips, trace data flow, and catch power gaps before soldering.",
+  "artifact_class": "static-web",
+  "user": "Hobbyists planning large addressable-LED art installations.",
+  "smallest_useful_product": "Draw strips and pixels, place controllers and supplies, trace data direction, estimate current, flag power-injection assumptions, and export a labeled SVG.",
+  "monetization": "freemium"
+}

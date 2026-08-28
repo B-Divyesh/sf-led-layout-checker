@@ -1,14 +1,59 @@
 # LED Layout Checker
 
-Live: https://led-layout-checker.sociobot.in — built by the Param Factory (`static-web`).
+Plan addressable LED paths, trace data direction, estimate current, and mark power injection before soldering.
 
-See `.factory/brief.json` for the researched problem this solves and `.factory/design.md` for the visual system.
+It is for hobbyists planning large WS281x-style art. The checker is a pre-build reasoning aid, not electrical advice or firmware control.
+
+Live site: <https://led-layout-checker.sociobot.in>
+One-click demo: <https://led-layout-checker.sociobot.in/demo>
+
+## What it does
+
+- Draws multi-point LED segments in data order.
+- Places controllers and power supplies on the plan.
+- Estimates per-segment and total current from user-set assumptions.
+- Flags missing power points, long single-ended runs, missing controllers, and low supply headroom.
+- Exports a labeled SVG for every plan.
+- Works offline after the first visit.
+
+Plans use local browser storage. Demo data uses a separate key and never overwrites a real plan. No account, analytics, runtime font, or hardware connection is required.
+
+## Demo
+
+Open `/demo` to load a 480-pixel garden arch. It includes three segments, one controller, two supplies, and two power warnings. **Reset demo** restores the sample. **Start for real** removes the demo copy and opens a blank plan.
+
+## Studio license
+
+The free planner includes all checks and labeled SVG export. A $12 one-time Studio license adds multiple controllers and a text parts summary. Checkout and verification use the Sociobot billing API; no payment provider is embedded here.
 
 ## Develop
 
-```
+Requires Node.js 22 or newer.
+
+```sh
 npm install
 npm run dev
-npm test
-npm run build   # -> dist/
 ```
+
+Open <http://localhost:5173>. The demo is at <http://localhost:5173/demo>.
+
+## Test and build
+
+```sh
+npm test
+npm run build
+```
+
+`npm test` runs calculation tests, a production build, claim tests, an accessibility scan, an offline reload, and a 390px keyboard path. `npm run build` writes the static site to `dist/` with `index.html` at its root.
+
+Deploy `dist/` to Azure Static Web Apps. `public/staticwebapp.config.json` provides the SPA fallback, cache rules, and security headers.
+
+## Privacy and limits
+
+Plan data and a pasted license stay in local storage. License checks contact `api.sociobot.in` at most once per day. See `/privacy` and `/terms` in the product.
+
+Current estimates depend on the values you enter. Confirm wire size, voltage drop, fusing, connectors, and mains work with qualified guidance.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

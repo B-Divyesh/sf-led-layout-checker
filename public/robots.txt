@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://led-layout-checker.sociobot.in/sitemap.xml

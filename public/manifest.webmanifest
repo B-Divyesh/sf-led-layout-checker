@@ -1,0 +1,10 @@
+{
+  "name": "LED Layout Checker",
+  "short_name": "LED Checker",
+  "description": "Plan LED strips and check power assumptions before soldering.",
+  "start_url": "/planner",
+  "display": "standalone",
+  "background_color": "#07110f",
+  "theme_color": "#07110f",
+  "icons": [{ "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }]
+}
