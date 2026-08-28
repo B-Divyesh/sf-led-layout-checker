@@ -127,8 +127,8 @@ function landing(): string {
       </div>
       <figure class="hero-art">
         <picture>
-          <source srcset="/assets/hero-routing.webp" type="image/webp" />
-          <img src="/assets/hero-routing.png" width="1536" height="1024" fetchpriority="high" alt="An abstract LED sculpture plan with mint paths, amber nodes, and coral power branches." />
+          <source srcset="/assets/hero-routing-600.webp 600w, /assets/hero-routing.webp 1200w" sizes="(max-width: 700px) calc(100vw - 32px), 48vw" type="image/webp" />
+          <img src="/assets/hero-routing.png" srcset="/assets/hero-routing-600.png 600w, /assets/hero-routing.png 1200w" sizes="(max-width: 700px) calc(100vw - 32px), 48vw" width="1200" height="800" fetchpriority="high" alt="An abstract LED sculpture plan with mint paths, amber nodes, and coral power branches." />
         </picture>
         <figcaption>Trace data from controller to the last pixel.</figcaption>
       </figure>

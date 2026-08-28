@@ -43,7 +43,7 @@ A single spark travels along each data path to show direction. It lasts 2.4 seco
 
 ## Asset plan and provenance
 
-- `hero-routing.webp`: original abstract editorial illustration used on the landing page and as the source for the social preview.
+- `hero-routing.webp`: original abstract editorial illustration used on the landing page and as the source for the social preview. The public 600px and 1200px WebP/PNG variants are local optimized derivatives; phones select the 37 KB WebP.
 - Product diagrams, icons, favicon, and exported layouts are authored in SVG or CSS because their meaning depends on exact geometry.
 - Generation model: factory image deployment via `/opt/fleet/lib/gen-image.sh`.
 - Generation date: 2026-08-28.

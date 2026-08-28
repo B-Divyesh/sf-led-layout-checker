@@ -1,5 +1,5 @@
-const CACHE = 'led-layout-checker-v4';
-const SHELL = ['/', '/favicon.svg', '/assets/hero-routing.webp'];
+const CACHE = 'led-layout-checker-v5';
+const SHELL = ['/', '/favicon.svg', '/assets/hero-routing.webp', '/assets/hero-routing-600.webp', '/assets/hero-routing.png', '/assets/hero-routing-600.png'];
 
 async function cleanResponse(response) {
   return new Response(await response.arrayBuffer(), {
