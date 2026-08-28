@@ -136,6 +136,10 @@ test('canvas exposes routed geometry without application semantics', async ({ pa
 test('planner works at 390px and has a keyboard placement path', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/planner');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
   await page.getByRole('button', { name: /Segment/ }).click();
   await page.getByLabel('X', { exact: true }).fill('20');
   await page.getByLabel('Y', { exact: true }).fill('30');

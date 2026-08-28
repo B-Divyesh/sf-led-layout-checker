@@ -38,7 +38,7 @@ Results:
 - `npm test`: 4 Vitest and 20 Chromium tests pass.
 - Every command in `.factory/claims.json` was also run separately and passed from the installed tree.
 - `npm run build`: pass; `dist/index.html` exists.
-- Production JS: 33.09 KB raw / 11.05 KB gzip.
+- Production JS: 33.30 KB raw / 11.10 KB gzip.
 - Production CSS: 17.98 KB raw / 4.75 KB gzip.
 - Mobile hero WebP: 37.13 KB.
 - Azure Static Web Apps emulator: `/`, `/planner`, `/demo`, `/privacy`, and `/terms` return 200; an unknown path returns 404 with the designed page.

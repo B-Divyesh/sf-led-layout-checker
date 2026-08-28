@@ -109,7 +109,7 @@ function footer(): string {
 }
 
 function landing(): string {
-  return `${header()}<main id="main">
+  return `${header()}<main id="main" tabindex="-1">
     <section class="hero">
       <div class="hero-copy">
         <p class="eyebrow">Preflight for addressable LED art</p>
@@ -191,7 +191,7 @@ function planner(): string {
   const warningCount = checks.filter((check) => check.level === 'warn').length;
   const active = layout.segments.find((segment) => segment.id === activeSegmentId) ?? layout.segments[0];
   if (active && !activeSegmentId) activeSegmentId = active.id;
-  return `${header()}${demoMode ? demoBanner() : ''}<main id="main" class="planner-page">
+  return `${header()}${demoMode ? demoBanner() : ''}<main id="main" class="planner-page" tabindex="-1">
     <section class="planner-heading">
       <div><p class="eyebrow">Layout workspace</p><h1 tabindex="-1">Check your LED layout</h1><p>Edit the plan, then work through every marked assumption.</p></div>
       <div class="heading-actions"><span id="save-status" role="status">Changes save in this browser</span><button id="undo" ${undoStack.length ? '' : 'disabled'}>Undo</button><button class="primary" id="export-svg">Export labeled SVG</button></div>
@@ -321,7 +321,7 @@ function hexPoints(cx: number, cy: number, radius: number): string {
 function legalPage(kind: 'privacy' | 'terms'): string {
   const privacy = kind === 'privacy';
   const title = privacy ? 'Your plan stays on your device' : 'Use the checker as a planning aid';
-  return `${header()}<main id="main" class="text-page"><p class="eyebrow">${privacy ? 'Privacy' : 'Terms'}</p><h1 tabindex="-1">${title}</h1>${privacy ? `
+  return `${header()}<main id="main" class="text-page" tabindex="-1"><p class="eyebrow">${privacy ? 'Privacy' : 'Terms'}</p><h1 tabindex="-1">${title}</h1>${privacy ? `
     <p>LED Layout Checker stores your plan and license token in this browser. It does not send plan data to our servers.</p>
     <h2>What leaves your browser</h2><p>Verifying an existing license contacts the Sociobot billing service. Plan data is not included.</p><p>A stored verdict is reused for one day.</p>
     <h2>Demo data</h2><p>Demo changes use a separate browser key. “Start for real” removes that demo copy.</p>
@@ -333,7 +333,7 @@ function legalPage(kind: 'privacy' | 'terms'): string {
 }
 
 function notFound(): string {
-  return `${header()}<main id="main" class="not-found"><div class="broken-path" aria-hidden="true"><span>1</span><i></i><span>?</span></div><p class="eyebrow">404 · open circuit</p><h1 tabindex="-1">This path does not connect</h1><p>The page may have moved. Your saved plan is still in this browser.</p><a class="button primary" href="/planner" data-link>Return to the planner</a></main>${footer()}`;
+  return `${header()}<main id="main" class="not-found" tabindex="-1"><div class="broken-path" aria-hidden="true"><span>1</span><i></i><span>?</span></div><p class="eyebrow">404 · open circuit</p><h1 tabindex="-1">This path does not connect</h1><p>The page may have moved. Your saved plan is still in this browser.</p><a class="button primary" href="/planner" data-link>Return to the planner</a></main>${footer()}`;
 }
 
 function renderRoute(focusHeading = true): void {
@@ -361,6 +361,12 @@ function renderRoute(focusHeading = true): void {
 }
 
 function bindCommon(): void {
+  document.querySelector<HTMLAnchorElement>('.skip-link')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    const main = document.querySelector<HTMLElement>('#main');
+    main?.focus();
+    main?.scrollIntoView();
+  });
   document.querySelectorAll<HTMLAnchorElement>('a[data-link]').forEach((link) => link.addEventListener('click', (event) => {
     event.preventDefault();
     navigate(new URL(link.href).pathname);
