@@ -1,38 +1,59 @@
-# LED Layout Checker — adversarial review handoff
+# LED Layout Checker — polish round 1 handoff
 
-## Verdict
+## Outcome
 
-**FAIL** on 2026-08-28 for candidate `37278b880d18526a6cfd1c787af24764627a3ece`.
+All 21 findings from `.factory/review-1.md` are fixed and deployed at <https://led-layout-checker.sociobot.in>. The full finding-to-change-to-evidence map is in `.factory/polish-1.md`.
 
-The full report is `.factory/review-1.md`. It records 21 findings: 2 blocking, 9 major, and 10 minor. No product code was modified.
+Repair commit: `74261d1`
 
-The blocking defects are:
+Deployment id: `e5640888-db15-4851-b71a-074a9a0207d5`
 
-1. `/demo` reads and writes real Studio license keys.
-2. After service-worker installation, unknown navigations return the cached app shell with HTTP 200 instead of the designed 404 response.
+Artifact: static Vite/TypeScript site in `dist/`
 
-## Verification performed
+The routed-light visual identity is unchanged. The repair adds real demo license isolation, a direct `/?demo=1` entry, service-worker-safe 404 behavior, working pointer/keyboard selection, portable editable plan JSON, full route metadata, exact payment language, and plain public copy.
+
+## Verification
+
+From a fresh clone of `74261d1` after `npm ci`:
+
+- Every one of the 15 exact commands in `.factory/claims.json` passed independently.
+- `npm run lint` passed.
+- `npm run typecheck` passed.
+- `npm test` passed: 4 Vitest tests and 33 Playwright Chromium tests.
+- `npm audit --audit-level=high` passed with 0 vulnerabilities.
+- `npm run build` produced `dist/index.html`.
+
+Build output:
+
+- JavaScript: 42.38 KB raw / 13.61 KB gzip.
+- CSS: 19.01 KB raw / 4.95 KB gzip.
+- No external font or runtime script.
+
+Live verification after deployment:
+
+- Factory `verify-url.sh`: 200 response, 1,940 ms load, correct title/lang, one h1, main landmark, complete alt/button names, zero console errors.
+- Live Playwright + Axe: zero violations on `/`, `/planner`, `/?demo=1`, `/privacy`, `/terms`, and the 404.
+- Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.7 s, TBT 0 ms, CLS 0.
+- Mobile 390 px at 200% text: no horizontal overflow and no visible target below 44 px.
+- Demo flow: 480 pixels, 3 segments, 1 controller, 2 supplies, 11.5 A, and 2 warnings. Real plan/license sentinels stayed byte-identical through return-token verification, editing, reset, JSON import, and exit.
+- Offline: service-worker-controlled `/demo` reloaded with the sample. Unknown paths returned the designed 404 with status 404 after worker installation.
+- Privacy: normal demo editing made no cross-origin request. License calls remain explicit and go only to `api.sociobot.in`.
+- Checkout: production returned 303 to hosted Dodo checkout.
+- Deployment identity: live JavaScript SHA-256 matches `dist` at `91a66ee0b1e61ce2074b3832e7698df9acca2d76575f0b5f5d7fdf66e85c0f9d`.
+
+Evidence is under `.factory/evidence/polish-1/`.
+
+## Run locally
 
 ```sh
 npm ci
-npm run test:e2e -- --grep @claim:sample-preflight
-npm run test:unit -- -t @claim:preflight-rules
-npm run test:e2e -- --grep @claim:svg-export
-npm run test:e2e -- --grep @claim:local-only
-npm run test:e2e -- --grep @claim:demo-sandbox
-npm run test:e2e -- --grep @claim:offline-reload
-npm run test:e2e -- --grep @claim:studio-license
-npm run test:e2e -- --grep @claim:daily-license-check
-npm run test:e2e -- --grep @claim:studio-checkout
-npm run lint
 npm test
 npm run build
-mkdir -p /tmp/led-review-1-verify
-VERIFY_NODE_MODULES=/work/repo/node_modules /opt/fleet/lib/verify-url.sh https://led-layout-checker.sociobot.in /tmp/led-review-1-verify
+npm run dev
 ```
 
-All nine declared claim commands passed. The complete repository suite passed: 4 unit tests, 24 Playwright tests, lint, and two production builds; `dist/` was produced. Live Playwright checks covered mobile/desktop first read, demo reset/exit and storage sentinels, request logging, offline reload, all routes, metadata, history focus, 200% reflow, touch targets, reduced motion, the previous controller/coordinate/overflow repairs, and Axe scans. The internal/public link crawl passed; live checkout returned 303 to Dodo.
+Open <http://localhost:5173>. The isolated sample is <http://localhost:5173/?demo=1>.
 
-## Next steps
+## Known gaps and next steps
 
-Repair findings in severity order, add the missing sandbox/404/claims regressions described in the report, deploy, and rerun the full checklist from scratch. Do not treat the passing declared tests as acceptance: their current scope misses the real-license demo leak and several public claims.
+None. No finding of any severity remains open.

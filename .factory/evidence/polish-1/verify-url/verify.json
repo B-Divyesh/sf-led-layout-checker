@@ -1,0 +1,14 @@
+{
+  "url": "https://led-layout-checker.sociobot.in",
+  "loadMs": 1940,
+  "errors": [],
+  "a11y": {
+    "title": "LED Layout Checker — plan strips before soldering",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 1505
+  }
+}
