@@ -56,4 +56,18 @@ Open <http://localhost:5173>. The isolated sample is <http://localhost:5173/?dem
 
 ## Known gaps and next steps
 
-None. No finding of any severity remains open.
+At the end of polish round 1, no finding of any severity remained open.
+
+## Review round 2 — 2026-08-28
+
+Completed the requested adversarial first-read review without changing product code. Wrote `.factory/review-2.md` and committed the review documentation.
+
+Verification performed:
+
+- Fresh live Chromium checks at 390×844 and 1280×720.
+- One-click demo, reset, local-storage namespace, same-origin request log, offline service-worker 404, routes, metadata, and links.
+- Every exact command in `.factory/claims.json` from a fresh local clone after `npm ci`.
+- Local `npm test`, lint, typecheck, and production build.
+- Rechecked every finding in the earlier reviews, polish record, and verification records.
+
+Remaining review finding: `F-2-1` is a 25-word README sentence in **Test and build**, above the plain-words 22-word cap. The concrete rewrite is in `.factory/review-2.md`. The review verdict is FAIL until that documentation-only copy correction is made and rechecked.
