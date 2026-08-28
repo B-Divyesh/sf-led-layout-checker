@@ -35,10 +35,17 @@ export function runChecks(layout: Layout): Check[] {
   const needed = totalCurrent(layout) * 1.2;
   if (!layout.supplies.length) {
     checks.push({ level: 'warn', title: 'No supply placed', detail: 'Place a supply and set its available current.' });
-  } else if (supplyAmps < needed) {
-    checks.push({ level: 'warn', title: 'Supply headroom is low', detail: `${supplyAmps.toFixed(1)} A stated; ${needed.toFixed(1)} A includes 20% headroom.` });
   } else {
-    checks.push({ level: 'pass', title: 'Supply headroom is stated', detail: `${supplyAmps.toFixed(1)} A available for a ${needed.toFixed(1)} A target.` });
+    for (const supply of layout.supplies) {
+      if (supply.volts !== layout.voltage) {
+        checks.push({ level: 'warn', title: `${supply.name} voltage does not match`, detail: `${supply.volts} V supply; ${layout.voltage} V LED plan. Check the parts before wiring.` });
+      }
+    }
+    if (supplyAmps < needed) {
+      checks.push({ level: 'warn', title: 'Supply headroom is low', detail: `${supplyAmps.toFixed(1)} A stated; ${needed.toFixed(1)} A includes 20% headroom.` });
+    } else {
+      checks.push({ level: 'pass', title: 'Supply headroom is stated', detail: `${supplyAmps.toFixed(1)} A available for a ${needed.toFixed(1)} A target.` });
+    }
   }
   return checks;
 }

@@ -7,6 +7,13 @@
     "sandbox": "fresh browser context at /demo"
   },
   {
+    "id": "preflight-rules",
+    "claim": "Flags missing controllers, missing power points, long single-ended runs, low supply headroom, and supply-voltage mismatches.",
+    "where": "planner checks and README",
+    "test": "npm run test:unit -- -t @claim:preflight-rules",
+    "sandbox": "sample layout with one controlled change for each documented rule"
+  },
+  {
     "id": "svg-export",
     "claim": "Exports a labeled SVG with the plan and current estimate.",
     "where": "planner toolbar and landing page",

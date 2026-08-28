@@ -12,11 +12,11 @@ One-click demo: <https://led-layout-checker.sociobot.in/demo>
 - Draws multi-point LED segments in data order.
 - Places controllers and power supplies on the plan.
 - Estimates per-segment and total current from user-set assumptions.
-- Flags missing power points, long single-ended runs, missing controllers, and low supply headroom.
+- Flags missing power points, long single-ended runs, missing controllers, low supply headroom, and supply-voltage mismatches.
 - Exports a labeled SVG for every plan.
 - Works offline after the first visit.
 
-Plans use local browser storage. Demo data uses a separate key and never overwrites a real plan. No account, analytics, runtime font, or hardware connection is required.
+Plans use local browser storage. Demo data uses a separate key and never overwrites a real plan.
 
 ## Demo
 

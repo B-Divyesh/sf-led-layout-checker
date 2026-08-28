@@ -238,9 +238,9 @@ function planner(): string {
         </fieldset>
         <fieldset><legend>Selected segment</legend>${active ? segmentFields(active) : '<p class="empty-copy">Draw a segment to set its pixel count and power points.</p>'}</fieldset>
         <fieldset><legend>Sources</legend>
-          ${layout.controllers.map((controller) => `<div class="source-row"><span class="source-mark controller-mark">C</span><label>${escapeHtml(controller.name)}<input data-controller-name="${controller.id}" value="${escapeHtml(controller.name)}" /></label></div>`).join('') || '<p>No controller placed.</p>'}
-          ${layout.supplies.map((supply) => `<div class="source-row"><span class="source-mark supply-mark">P</span><label>${escapeHtml(supply.name)}<input data-supply-amps="${supply.id}" type="number" min="0.1" max="200" step="0.1" value="${supply.amps}" aria-label="${escapeHtml(supply.name)} available amps" /><span>A</span></label></div>`).join('') || '<p>No supply placed.</p>'}
-          <button id="add-controller" class="secondary">Add controller ${paid ? '' : '· Studio'}</button>
+          ${layout.controllers.map((controller) => `<div class="source-row"><span class="source-mark controller-mark">C</span><div class="source-fields"><label>${escapeHtml(controller.name)}<input data-controller-name="${controller.id}" value="${escapeHtml(controller.name)}" /></label><button class="remove-source" data-remove-controller="${controller.id}">Remove ${escapeHtml(controller.name)}</button></div></div>`).join('') || '<p>No controller placed. Add one to state where data begins.</p>'}
+          ${layout.supplies.map((supply) => `<div class="source-row"><span class="source-mark supply-mark">P</span><div class="source-fields"><label>${escapeHtml(supply.name)} voltage<select data-supply-volts="${supply.id}" aria-label="${escapeHtml(supply.name)} voltage"><option value="5" ${supply.volts === 5 ? 'selected' : ''}>5 V</option><option value="12" ${supply.volts === 12 ? 'selected' : ''}>12 V</option></select></label><label>Available current<input data-supply-amps="${supply.id}" type="number" min="0.1" max="200" step="0.1" value="${supply.amps}" aria-label="${escapeHtml(supply.name)} available amps" /><span>A</span></label><button class="remove-source" data-remove-supply="${supply.id}">Remove ${escapeHtml(supply.name)}</button></div></div>`).join('') || '<p>No supply placed.</p>'}
+          <button id="add-controller" class="secondary">Add controller ${paid || layout.controllers.length === 0 ? '' : '· Studio'}</button>
         </fieldset>
       </div>
     </section>
@@ -255,7 +255,8 @@ function segmentFields(segment: Segment): string {
     ${paid ? `<label>Controller<select id="segment-controller">${layout.controllers.map((controller) => `<option value="${controller.id}" ${controller.id === segment.controllerId ? 'selected' : ''}>${escapeHtml(controller.name)}</option>`).join('')}</select></label>` : ''}
     <label>Data direction<select id="segment-direction"><option value="forward" ${segment.direction === 'forward' ? 'selected' : ''}>Start → end</option><option value="reverse" ${segment.direction === 'reverse' ? 'selected' : ''}>End → start</option></select></label>
     <label>Power enters<select id="segment-injection"><option value="none" ${segment.injection === 'none' ? 'selected' : ''}>Not marked</option><option value="start" ${segment.injection === 'start' ? 'selected' : ''}>Data start</option><option value="both" ${segment.injection === 'both' ? 'selected' : ''}>Both ends</option></select></label>
-    <p class="field-result">Estimated segment current: <strong>${segmentCurrent(segment, layout).toFixed(1)} A</strong></p>`;
+    <p class="field-result">Estimated segment current: <strong>${segmentCurrent(segment, layout).toFixed(1)} A</strong></p>
+    <button id="remove-segment" class="remove-source">Remove ${escapeHtml(segment.name)}</button>`;
 }
 
 function studioSection(): string {
@@ -393,9 +394,22 @@ function bindPlanner(): void {
   document.querySelector('#export-summary')?.addEventListener('click', exportSummary);
   document.querySelector('#motion-toggle')?.addEventListener('click', () => { motionPaused = !motionPaused; renderRoute(false); });
   document.querySelector('#add-controller')?.addEventListener('click', () => {
-    if (!paid) return toast('Studio adds multiple controllers. Enter a license below or buy Studio.');
+    if (!paid && layout.controllers.length >= 1) return toast('Studio adds multiple controllers. Enter a license below or buy Studio.');
     activeTool = 'controller'; toast('Controller tool selected. Click the plan to place it.'); renderRoute(false);
   });
+  document.querySelector('#remove-segment')?.addEventListener('click', () => {
+    const removedId = activeSegmentId;
+    updateAndRender(() => {
+      layout.segments = layout.segments.filter((segment) => segment.id !== removedId);
+      activeSegmentId = layout.segments[0]?.id ?? '';
+    });
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-remove-controller]').forEach((button) => button.addEventListener('click', () => {
+    updateAndRender(() => { layout.controllers = layout.controllers.filter((controller) => controller.id !== button.dataset.removeController); });
+  }));
+  document.querySelectorAll<HTMLButtonElement>('[data-remove-supply]').forEach((button) => button.addEventListener('click', () => {
+    updateAndRender(() => { layout.supplies = layout.supplies.filter((supply) => supply.id !== button.dataset.removeSupply); });
+  }));
   document.querySelector('#verify-license')?.addEventListener('click', restoreLicense);
   bindInputs();
 }
@@ -420,6 +434,9 @@ function bindInputs(): void {
   })));
   document.querySelectorAll<HTMLInputElement>('[data-supply-amps]').forEach((input) => input.addEventListener('change', () => updateAndRender(() => {
     const item = layout.supplies.find((supply) => supply.id === input.dataset.supplyAmps); if (item) item.amps = clamp(Number(input.value), 0.1, 200);
+  })));
+  document.querySelectorAll<HTMLSelectElement>('[data-supply-volts]').forEach((input) => input.addEventListener('change', () => updateAndRender(() => {
+    const item = layout.supplies.find((supply) => supply.id === input.dataset.supplyVolts); if (item) item.volts = Number(input.value);
   })));
 }
 

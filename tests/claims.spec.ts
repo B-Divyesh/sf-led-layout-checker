@@ -84,10 +84,12 @@ test('@claim:studio-license verifies and exports a parts summary', async ({ page
   expect(download.suggestedFilename()).toContain('-parts.txt');
 });
 
-test('landing page has no serious accessibility issues', async ({ page }) => {
-  await page.goto('/');
-  const results = await new AxeBuilder({ page: page as never }).analyze();
-  expect(results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+test('landing page and planner have no serious accessibility issues', async ({ page }) => {
+  for (const path of ['/', '/demo']) {
+    await page.goto(path);
+    const results = await new AxeBuilder({ page: page as never }).analyze();
+    expect(results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? '')), path).toEqual([]);
+  }
 });
 
 test('planner works at 390px and has a keyboard placement path', async ({ page }) => {
@@ -105,10 +107,32 @@ test('planner works at 390px and has a keyboard placement path', async ({ page }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });
 
+test('saved items can be corrected, removed, and restored', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByLabel('Supply A voltage').selectOption('12');
+  await expect(page.getByText('Supply A voltage does not match')).toBeVisible();
+  await page.getByRole('button', { name: 'Remove Arch left' }).click();
+  await expect(page.getByText('Arch left has a power assumption')).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByText('Arch left has a power assumption')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Remove Supply A' }).click();
+  await expect(page.getByLabel('Supply A voltage')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.getByLabel('Supply A voltage')).toHaveValue('12');
+});
+
 test('privacy, terms, and missing routes render one h1', async ({ page }) => {
   for (const path of ['/privacy', '/terms', '/missing']) {
     await page.goto(path);
     await expect(page.locator('h1')).toHaveCount(1);
     await expect(page.locator('main')).toHaveCount(1);
   }
+});
+
+test('all routes load without console errors', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  for (const path of ['/', '/planner', '/demo', '/privacy', '/terms', '/missing']) await page.goto(path);
+  expect(errors).toEqual([]);
 });
