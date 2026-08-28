@@ -53,12 +53,17 @@ All nine entries in `.factory/claims.json` have one exact tagged regression and 
 
 ## Deployment and live checks
 
-Pending the repair commit and production deployment. After deployment, re-run:
-
-```sh
-/opt/fleet/lib/verify-url.sh https://led-layout-checker.sociobot.in .factory/evidence/live
-curl -I https://led-layout-checker.sociobot.in/definitely-missing-verifier-path
-```
+- Repair commits `5dfd6b8` and `6e841af` were pushed to `origin/main`.
+- Production deployment `5d80bb1c-f255-4c1d-9622-7f727bcc8f9a` completed successfully to the existing Central US Static Web App and custom domain.
+- All 19 public build files match the deployed files byte-for-byte by SHA-256. Final `index.html` SHA-256: `1915b031547a9f7d1dcbdd2852d0513e9d45aac5c58d27c455ed25d8b2461af8`.
+- Live factory URL verification passes in 906 ms with zero console errors and all baseline semantics present.
+- Live `/definitely-missing-verifier-path` returns HTTP 404 and the designed not-found page. The five real routes and every rendered link return HTTP 200.
+- Live root and 404 responses include CSP, HSTS, Referrer-Policy, nosniff, and Permissions-Policy. Live hero art uses a one-day cache; hashed JS uses a one-year immutable cache.
+- Fresh live browser checks pass at 1280×720 and 390×844. Required first-screen content ends at y=599 and y=669 respectively.
+- Live 390px browser checks show no undersized target and no overflow at 200% text (`scrollWidth = clientWidth = 390`). Skip-link activation moves focus to `main`; keyboard coordinate entry creates a segment.
+- Live axe scans report zero violations on desktop landing, mobile landing, and mobile demo. Normal landing/demo use makes no cross-origin request.
+- A fresh service worker updates, reloads `/demo` offline with the 11.5 A sample, and returns cached HTML with all four tested security policies.
+- Live Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 0.9 s, LCP 1.7 s, TBT 0 ms, CLS 0.
 
 ## Known gap
 
