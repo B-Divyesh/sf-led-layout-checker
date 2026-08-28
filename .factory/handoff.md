@@ -1,4 +1,14 @@
-# LED Layout Checker — repair handoff
+# LED Layout Checker — verification handoff
+
+## Current release verdict: **FAIL — do not release**
+
+Independent verification on 2026-08-28 tested candidate `320fc79d9f143e22f5bfc7edc914b7ac8cae38e2` at `https://led-layout-checker.sociobot.in`.
+
+All nine claim commands, clean-candidate tests/build/lint/typecheck, deployed checkout, first-read/demo gate, local-first privacy behavior, PWA offline reload, response policies, bundle budgets, rate limiting, and Lighthouse pass. The live candidate has one release-blocking S1 accessibility defect: after a routine fourth segment is added, the scrollable preflight result list is not focusable and Axe reports the serious `scrollable-region-focusable` violation. Details and reproduction are in `.factory/verification-3.md`.
+
+The next repair must make overflowing results keyboard-accessible (or avoid the constrained scroll region), add a dynamic-overflow Axe regression, and rerun verification. No product code was changed by this verifier.
+
+## Previous repair handoff
 
 Repaired 2026-08-28 for work order `led-layout-checker-repair-2` from verifier report commit `59c3668d48859d3d449786b72132a3b336def7b6` and candidate `cb1648ed78490a69ff0c03347a94930582b6b2d8`.
 
