@@ -24,7 +24,7 @@ Open `/demo` to load a 480-pixel garden arch. It includes three segments, one co
 
 ## Studio license
 
-The free planner includes all checks and labeled SVG export. Studio adds multiple controllers and a text parts summary. New Studio sales are paused because production checkout is not enabled. Existing license holders can restore access through the Sociobot verification service.
+The free planner includes all checks and labeled SVG export. Studio adds multiple controllers and a text parts summary for a $12 one-time purchase. Checkout runs through Sociobot, with Dodo as merchant of record. Approved refunds revoke the license. Existing license holders can restore access through the Sociobot verification service.
 
 ## Develop
 

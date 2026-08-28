@@ -66,7 +66,7 @@ test('@claim:offline-reload works offline after the first visit', async ({ page,
 test('@claim:studio-license verifies and exports a parts summary', async ({ page }) => {
   await page.route('https://api.sociobot.in/api/v1/products/led-layout-checker/verify?license=test-license', (route) => route.fulfill({ json: { valid: true, reason: 'ok' } }));
   await page.goto('/demo');
-  await page.getByText('Restore an existing license').click();
+  await page.getByText('Have a license?').click();
   await page.getByLabel('License token').fill('test-license');
   await page.getByRole('button', { name: 'Verify license' }).click();
   await expect(page.getByText('Studio active')).toBeVisible();
@@ -152,6 +152,48 @@ test('planner works at 390px and has a keyboard placement path', async ({ page }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });
 
+test('empty coordinate fields are rejected and focus the first field', async ({ page }) => {
+  await page.goto('/planner');
+  await page.getByRole('button', { name: /Segment/ }).click();
+  await page.getByLabel('X', { exact: true }).fill('');
+  await page.getByLabel('Y', { exact: true }).fill('');
+  await page.getByRole('button', { name: 'Place at coordinates' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Use coordinates from 0 to 100. Enter both X and Y.' })).toBeVisible();
+  await expect(page.getByLabel('X', { exact: true })).toBeFocused();
+  await expect(page.getByLabel('X', { exact: true })).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByText('1 points in new segment')).toHaveCount(0);
+  await expect(page.locator('#plan-description')).not.toContainText('coordinates 0, 0');
+});
+
+test('empty license submission announces recovery and focuses the required field', async ({ page }) => {
+  let verificationRequests = 0;
+  page.on('request', (request) => {
+    if (request.url().includes('/verify?license=')) verificationRequests += 1;
+  });
+  await page.goto('/planner#studio-title');
+  await page.getByText('Have a license?').click();
+  const input = page.getByLabel('License token');
+  await expect(input).toHaveAttribute('required', '');
+  await page.getByRole('button', { name: 'Verify license' }).click();
+  await expect(page.locator('#license-message')).toHaveText('Enter your license token, then verify again.');
+  await expect(input).toBeFocused();
+  await expect(input).toHaveAttribute('aria-invalid', 'true');
+  expect(verificationRequests).toBe(0);
+});
+
+test('restore and locked-controller links preserve and honor the Studio fragment', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Restore a license' }).click();
+  await expect(page).toHaveURL('/planner#studio-title');
+  await expect(page.locator('#studio-title')).toBeFocused();
+
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Add controller · Studio' }).click();
+  await expect(page).toHaveURL('/demo#studio-title');
+  await expect(page.locator('#studio-title')).toBeFocused();
+  await expect(page.getByRole('link', { name: 'Buy Studio for $12' })).toBeVisible();
+});
+
 test('saved items can be corrected, removed, and restored', async ({ page }) => {
   await page.goto('/demo');
   await page.getByLabel('Supply A voltage').selectOption('12');
@@ -219,13 +261,18 @@ test('@claim:daily-license-check checks a stored license at most once per day', 
   expect(requests).toBe(1);
 });
 
-test('@claim:studio-sales-paused does not advertise the unavailable checkout', async ({ page }) => {
-  for (const path of ['/', '/planner']) {
-    await page.goto(path);
-    await expect(page.locator('a[href*="/checkout"]')).toHaveCount(0);
-    await expect(page.getByText(/sales are paused/i)).toBeVisible();
-  }
-  await expect(page.getByText('Restore an existing license')).toBeVisible();
+test('@claim:studio-checkout opens the $12 one-time hosted checkout', async ({ page }) => {
+  let checkoutRequests = 0;
+  await page.route('https://api.sociobot.in/api/v1/products/led-layout-checker/checkout', async (route) => {
+    checkoutRequests += 1;
+    await route.fulfill({ status: 303, headers: { location: 'http://127.0.0.1:4173/checkout-fixture' } });
+  });
+  await page.goto('/demo');
+  await expect(page.getByText('$12 once.')).toBeVisible();
+  await expect(page.getByText(/merchant of record/)).toBeVisible();
+  await page.getByRole('link', { name: 'Buy Studio for $12' }).click();
+  await expect(page).toHaveURL('/checkout-fixture');
+  expect(checkoutRequests).toBe(1);
 });
 
 test('static host config returns a real 404 and PWA metadata has install icons', async () => {
@@ -246,7 +293,7 @@ test('offline shell keeps browser security policies and avoids full-size hero pr
     if (!navigator.serviceWorker.controller) await new Promise<void>((resolve) => navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), { once: true }));
   });
   const cachedUrls = await page.evaluate(async () => {
-    const cache = await caches.open('led-layout-checker-v6');
+    const cache = await caches.open('led-layout-checker-v7');
     return (await cache.keys()).map((request) => new URL(request.url).pathname);
   });
   expect(cachedUrls).toContain('/assets/hero-routing-600.webp');

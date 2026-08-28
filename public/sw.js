@@ -1,4 +1,4 @@
-const CACHE = 'led-layout-checker-v6';
+const CACHE = 'led-layout-checker-v7';
 const SHELL = ['/', '/favicon.svg', '/manifest.webmanifest', '/icon-192.png', '/assets/hero-routing-600.webp'];
 
 const SECURITY_HEADERS = {

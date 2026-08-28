@@ -32,10 +32,17 @@ Audited 2026-08-28. Counts split contractions and hyphenated forms as one word. 
 | A planning check, not electrical approval | 6 | pass |
 | Current figures use your pixel, brightness, and supply assumptions. | 9 | pass |
 | Confirm wire size, fusing, voltage drop, and mains work with qualified guidance. | 12 | pass |
-| Studio licenses | 2 | pass |
-| Keep using an existing Studio license | 6 | pass |
+| Studio license | 2 | pass |
+| Plan larger builds for $12 once | 6 | pass |
 | Studio adds multiple controllers and a parts summary. | 8 | pass |
-| New sales are paused while checkout is unavailable. | 8 | pass |
+| Checks and labeled SVG export stay free. | 7 | pass |
+| Sociobot and Dodo are the merchant of record. | 8 | pass |
+| Refunds are handled there and revoke the license. | 8 | pass |
+| Privacy | 1 | pass |
+| Terms | 1 | pass |
+| $12 | 1 | pass |
+| one-time purchase | 2 | pass |
+| Buy Studio | 2 | pass |
 | Restore a license | 3 | pass |
 | Plan LED paths before soldering. | 5 | pass |
 | Hero imagery was generated for this product. | 7 | pass |

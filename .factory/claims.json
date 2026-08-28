@@ -56,10 +56,10 @@
     "sandbox": "stored license with a stale token-bound verdict; recorded valid verification response; two reloads"
   },
   {
-    "id": "studio-sales-paused",
-    "claim": "New Studio sales are paused while checkout is unavailable.",
-    "where": "landing and Studio panel",
-    "test": "npm run test:e2e -- --grep @claim:studio-sales-paused",
-    "sandbox": "landing and planner contain no checkout link; existing license restore remains available"
+    "id": "studio-checkout",
+    "claim": "Studio is a $12 one-time purchase through the hosted Sociobot checkout.",
+    "where": "landing, Studio panel, terms, and README",
+    "test": "npm run test:e2e -- --grep @claim:studio-checkout",
+    "sandbox": "demo layout; recorded hosted-checkout redirect; assert price and merchant disclosure"
   }
 ]

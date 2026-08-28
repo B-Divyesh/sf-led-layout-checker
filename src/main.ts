@@ -7,7 +7,7 @@ const REAL_KEY = 'led-layout-checker:layout:v1';
 const DEMO_KEY = 'demo:led-layout-checker:layout:v1';
 const LICENSE_KEY = 'sb_license:led-layout-checker';
 const LICENSE_CACHE_KEY = 'sb_license_check:led-layout-checker';
-const BUILD_ID = 'v1.0.1';
+const BUILD_ID = 'v1.0.2';
 const BILLING_BASE = 'https://api.sociobot.in/api/v1/products/led-layout-checker';
 const palette = ['#168a67', '#d45a49', '#a66f00', '#5368c9', '#8a4ba3'];
 
@@ -157,11 +157,13 @@ function landing(): string {
     </section>
     <section class="pricing" aria-labelledby="pricing-title">
       <div>
-        <p class="eyebrow">Studio licenses</p>
-        <h2 id="pricing-title">Keep using an existing Studio license</h2>
-        <p>Studio adds multiple controllers and a parts summary. New sales are paused while checkout is unavailable.</p>
+        <p class="eyebrow">Studio license</p>
+        <h2 id="pricing-title">Plan larger builds for $12 once</h2>
+        <p>Studio adds multiple controllers and a parts summary. Checks and labeled SVG export stay free.</p>
+        <p>Sociobot and Dodo are the merchant of record. Refunds are handled there and revoke the license.</p>
+        <p><a href="/privacy" data-link>Privacy</a> · <a href="/terms" data-link>Terms</a></p>
       </div>
-      <div class="price-action"><a class="button light" href="/planner#studio-title" data-link>Restore a license</a></div>
+      <div class="price-action"><strong>$12</strong><span>one-time purchase</span><a class="button light" href="${BILLING_BASE}/checkout">Buy Studio</a><a class="text-link" href="/planner#studio-title" data-link>Restore a license</a></div>
     </section>
   </main>${footer()}`;
 }
@@ -205,8 +207,9 @@ function planner(): string {
         <button class="tool ${activeTool === 'supply' ? 'active' : ''}" data-tool="supply" aria-pressed="${activeTool === 'supply'}"><span>◇</span>Supply</button>
         <div class="keyboard-place">
           <h3>Keyboard point</h3>
-          <label>X <input id="point-x" type="number" min="0" max="100" value="50" /></label>
-          <label>Y <input id="point-y" type="number" min="0" max="100" value="50" /></label>
+          <p id="coordinate-help">Enter X and Y from 0 to 100.</p>
+          <label>X <input id="point-x" type="number" min="0" max="100" value="50" required aria-describedby="coordinate-help" /></label>
+          <label>Y <input id="point-y" type="number" min="0" max="100" value="50" required aria-describedby="coordinate-help" /></label>
           <button id="add-point">Place at coordinates</button>
         </div>
         ${drawingPoints.length ? `<div class="draw-status" role="status"><strong>${drawingPoints.length} points in new segment</strong><button id="finish-segment" ${drawingPoints.length < 2 ? 'disabled' : ''}>Finish segment</button><button id="cancel-draw">Cancel</button></div>` : ''}
@@ -262,8 +265,8 @@ function segmentFields(segment: Segment): string {
 
 function studioSection(): string {
   return `<section class="studio-panel" aria-labelledby="studio-title">
-    <div><p class="eyebrow">Optional Studio</p><h2 id="studio-title">Multiple controllers and a parts summary</h2><p>The free planner keeps its checks and labeled SVG export. New Studio sales are paused.</p></div>
-    <div class="studio-actions">${paid ? `<span class="license-active">✓ Studio active</span><button id="export-summary">Export parts summary</button>` : `${licenseNotice ? `<p class="license-notice">${escapeHtml(licenseNotice)}</p>` : ''}<details><summary>Restore an existing license</summary><label>License token<input id="license-token" autocomplete="off" /></label><button id="verify-license">Verify license</button><p id="license-message" role="status"></p></details>`}</div>
+    <div><p class="eyebrow">Optional Studio</p><h2 id="studio-title" tabindex="-1">Multiple controllers and a parts summary</h2><p>$12 once. The free planner keeps its checks and labeled SVG export.</p><p>Sociobot and Dodo are the merchant of record. Refunds are handled there and revoke the license.</p><p><a href="/privacy" data-link>Privacy</a> · <a href="/terms" data-link>Terms</a></p></div>
+    <div class="studio-actions">${paid ? `<span class="license-active">✓ Studio active</span><button id="export-summary">Export parts summary</button>` : `<a class="button light" href="${BILLING_BASE}/checkout">Buy Studio for $12</a>${licenseNotice ? `<p class="license-notice">${escapeHtml(licenseNotice)}</p>` : ''}<details><summary>Have a license?</summary><p id="license-requirement">Paste the token from your purchase email.</p><label>License token<input id="license-token" autocomplete="off" required aria-describedby="license-requirement license-message" /></label><button id="verify-license">Verify license</button><p id="license-message" role="status" aria-live="polite"></p></details>`}</div>
   </section>`;
 }
 
@@ -323,12 +326,12 @@ function legalPage(kind: 'privacy' | 'terms'): string {
   const title = privacy ? 'Your plan stays on your device' : 'Use the checker as a planning aid';
   return `${header()}<main id="main" class="text-page" tabindex="-1"><p class="eyebrow">${privacy ? 'Privacy' : 'Terms'}</p><h1 tabindex="-1">${title}</h1>${privacy ? `
     <p>LED Layout Checker stores your plan and license token in this browser. It does not send plan data to our servers.</p>
-    <h2>What leaves your browser</h2><p>Verifying an existing license contacts the Sociobot billing service. Plan data is not included.</p><p>A stored verdict is reused for one day.</p>
+    <h2>What leaves your browser</h2><p>Opening checkout or verifying a license contacts the Sociobot billing service. Plan data is not included.</p><p>A stored verdict is reused for one day.</p>
     <h2>Demo data</h2><p>Demo changes use a separate browser key. “Start for real” removes that demo copy.</p>
     <h2>Delete your data</h2><p>Clear this site’s browser storage to remove plans and license data.</p>` : `
     <p>This tool provides conservative estimates from the values you enter. It is not electrical advice or certification.</p>
     <h2>Your responsibility</h2><p>Confirm supply sizing, wire gauge, fusing, voltage drop, connectors, and mains work with qualified guidance.</p>
-    <h2>Studio license</h2><p>Existing Studio licenses can be restored. New sales are paused while checkout is unavailable.</p>
+    <h2>Studio purchase</h2><p>Studio is a $12 one-time license. Sociobot and Dodo are the merchant of record. Approved refunds revoke the license.</p>
     <h2>No warranty</h2><p>The software is provided “as is” under the MIT License. Stop if a check conflicts with qualified advice.</p>`}<a class="button primary" href="/planner" data-link>Open the planner</a></main>${footer()}`;
 }
 
@@ -353,8 +356,10 @@ function renderRoute(focusHeading = true): void {
   bindCommon();
   if (isPlannerPath(path)) bindPlanner();
   if (focusHeading) requestAnimationFrame(() => {
-    const heading = document.querySelector<HTMLElement>('h1');
+    const hashTarget = location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+    const heading = hashTarget ?? document.querySelector<HTMLElement>('h1');
     heading?.focus({ preventScroll: true });
+    if (hashTarget) hashTarget.scrollIntoView();
     const status = document.querySelector<HTMLElement>('#route-status');
     if (status) status.textContent = heading?.textContent ?? 'Page changed';
   });
@@ -369,7 +374,8 @@ function bindCommon(): void {
   });
   document.querySelectorAll<HTMLAnchorElement>('a[data-link]').forEach((link) => link.addEventListener('click', (event) => {
     event.preventDefault();
-    navigate(new URL(link.href).pathname);
+    const url = new URL(link.href);
+    navigate(`${url.pathname}${url.search}${url.hash}`);
   }));
 }
 
@@ -388,9 +394,19 @@ function bindPlanner(): void {
   }));
   document.querySelector('#plan-canvas')?.addEventListener('click', placeFromPointer);
   document.querySelector('#add-point')?.addEventListener('click', () => {
-    const x = Number((document.querySelector<HTMLInputElement>('#point-x'))?.value);
-    const y = Number((document.querySelector<HTMLInputElement>('#point-y'))?.value);
-    if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 100 || y < 0 || y > 100) return toast('Use coordinates from 0 to 100.');
+    const xInput = document.querySelector<HTMLInputElement>('#point-x');
+    const yInput = document.querySelector<HTMLInputElement>('#point-y');
+    const invalidInput = [xInput, yInput].find((input) => !input?.value.trim());
+    const x = Number(xInput?.value);
+    const y = Number(yInput?.value);
+    if (invalidInput || !Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 100 || y < 0 || y > 100) {
+      const firstInvalid = invalidInput ?? (x < 0 || x > 100 || !Number.isFinite(x) ? xInput : yInput);
+      firstInvalid?.setAttribute('aria-invalid', 'true');
+      firstInvalid?.focus();
+      return toast('Use coordinates from 0 to 100. Enter both X and Y.');
+    }
+    xInput?.removeAttribute('aria-invalid');
+    yInput?.removeAttribute('aria-invalid');
     placeAt({ x, y });
   });
   document.querySelector('#finish-segment')?.addEventListener('click', finishSegment);
@@ -412,7 +428,13 @@ function bindPlanner(): void {
   document.querySelector('#export-summary')?.addEventListener('click', exportSummary);
   document.querySelector('#motion-toggle')?.addEventListener('click', () => { motionPaused = !motionPaused; renderRoute(false); });
   document.querySelector('#add-controller')?.addEventListener('click', () => {
-    if (!paid && layout.controllers.length >= 1) return toast('Studio adds multiple controllers. Enter a license below or buy Studio.');
+    if (!paid && layout.controllers.length >= 1) {
+      history.replaceState({}, '', `${location.pathname}${location.search}#studio-title`);
+      const studioTitle = document.querySelector<HTMLElement>('#studio-title');
+      studioTitle?.focus({ preventScroll: true });
+      studioTitle?.scrollIntoView();
+      return toast('Studio adds multiple controllers. Buy Studio below or enter a license.');
+    }
     activeTool = 'controller'; toast('Controller tool selected. Click the plan to place it.'); renderRoute(false);
   });
   document.querySelector('#remove-segment')?.addEventListener('click', () => {
@@ -541,7 +563,14 @@ async function restoreLicense(): Promise<void> {
   const input = document.querySelector<HTMLInputElement>('#license-token');
   const message = document.querySelector<HTMLElement>('#license-message');
   const token = input?.value.trim();
-  if (!token || !message) return;
+  if (!message) return;
+  if (!token) {
+    message.textContent = 'Enter your license token, then verify again.';
+    input?.setAttribute('aria-invalid', 'true');
+    input?.focus();
+    return;
+  }
+  input?.removeAttribute('aria-invalid');
   message.textContent = 'Checking license…';
   try {
     const response = await fetch(`${BILLING_BASE}/verify?license=${encodeURIComponent(token)}`);
@@ -594,7 +623,7 @@ function safeCache(raw: string | null): { token: string; valid: boolean; checked
 }
 
 window.addEventListener('popstate', () => renderRoute());
-renderRoute(false);
+renderRoute(Boolean(location.hash));
 void checkStoredLicense();
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
